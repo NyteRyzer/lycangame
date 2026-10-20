@@ -1,0 +1,69 @@
+name: Build LYCAN
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+            target: --linux AppImage tar.gz
+          - name: Windows
+            os: windows-latest
+            target: --win nsis zip
+          - name: macOS
+            os: macos-latest
+            target: --mac dmg zip --x64 --arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Bundle game
+        run: npm run build:web
+
+      - name: Package desktop app
+        run: npx electron-builder ${{ matrix.target }} --publish never
+        env:
+          # builds are unsigned; see README for signing
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LYCAN-${{ matrix.name }}
+          path: |
+            dist/*.AppImage
+            dist/*.tar.gz
+            dist/*.exe
+            dist/*.zip
+            dist/*.dmg
+          if-no-files-found: error
+
+      - name: Attach to GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.AppImage
+            dist/*.tar.gz
+            dist/*.exe
+            dist/*.zip
+            dist/*.dmg
