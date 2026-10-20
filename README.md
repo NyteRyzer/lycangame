@@ -25,7 +25,7 @@ Packages land in `dist/`.
 
 Build notes:
 
-- You can build Linux, Windows and the macOS `.zip` from Linux (`npm run dist:all`). The macOS `.dmg` must be built on a Mac, which CI does.
+- From Linux, `npm run dist:all` builds the Linux packages, the Windows portable `.zip` and the macOS `.zip`. The Windows installer (`.exe`) needs Windows or wine, and the macOS `.dmg` needs a Mac. CI builds both on native runners.
 - Builds are **unsigned**:
   - **macOS:** right-click the app and choose *Open* the first time, or run `xattr -cr LYCAN.app`.
   - **Windows:** SmartScreen may ask you to click *More info → Run anyway*.

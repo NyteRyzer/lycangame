@@ -16,7 +16,7 @@
     "dist:linux": "node scripts/build.mjs && electron-builder --linux",
     "dist:win": "node scripts/build.mjs && electron-builder --win",
     "dist:mac": "node scripts/build.mjs && electron-builder --mac",
-    "dist:all": "node scripts/build.mjs && electron-builder --linux --win --mac"
+    "dist:all": "node scripts/build.mjs && electron-builder --linux AppImage tar.gz --win zip --mac zip"
   },
   "dependencies": {},
   "devDependencies": {
