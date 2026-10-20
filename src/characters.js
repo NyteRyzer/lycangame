@@ -122,7 +122,7 @@ export class HumanRig {
 
 // ---------------------------------------------------------------------------
 export class WolfRig {
-  constructor({ fur = '#4a3b30', furDark = '#2a211b', belly = '#6b5847', eyes = '#ffcc33', scale = 1 } = {}) {
+  constructor({ fur = '#6a5442', furDark = '#3a2d23', belly = '#8a735c', eyes = '#ffcc33', scale = 1 } = {}) {
     this.root = new THREE.Group();
     this.body = pivot(this.root, 0, 0, 0);
     this.body.scale.setScalar(scale);

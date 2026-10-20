@@ -1,13 +1,31 @@
-# LYCAN — The Ultimate Werewolf Simulator
+<p align="center"><img src="build/icon.png" width="128" alt="LYCAN icon" /></p>
+
+<h1 align="center">LYCAN</h1>
+<p align="center"><b>The Ultimate Werewolf Simulator</b></p>
+
+<p align="center">
+  <a href="https://github.com/NyteRyzer/lycangame/actions/workflows/build.yml"><img src="https://github.com/NyteRyzer/lycangame/actions/workflows/build.yml/badge.svg" alt="Build status" /></a>
+  <img src="https://img.shields.io/badge/platforms-Linux%20%7C%20Windows%20%7C%20macOS-555" alt="Platforms: Linux, Windows, macOS" />
+</p>
+
+![The beast under the moon in downtown Greyhaven](docs/screenshots/beast.png)
 
 A third-person open-world werewolf action game. You can change between human and beast whenever you want, and the full moon forces the change. You roam **Greyhaven**: downtown towers, suburbs, an industrial district, a lake, a forest and mountains. Every choice you make pushes you toward becoming the city's protector or its greatest threat.
 
 The main design goal: **moving around as the werewolf should be fun on its own, even when you're not on a mission.**
 
+## Screenshots
+
 | | |
-|---|---|
-| ![Title](docs/screenshots/01-title.png) | ![Sprinting downtown](docs/screenshots/05-sprint.png) |
-| ![Map of Greyhaven](docs/screenshots/10-map.png) | ![Lakeside at night](docs/screenshots/13-lake-fullmoon.png) |
+| --- | --- |
+| ![Climbing a tower](docs/screenshots/climb.png) <br> **Climb anything.** Run into a wall to scale it, then pull up onto the roof. | ![Dusk over the rooftops](docs/screenshots/rooftop-dusk.png) <br> **Own the skyline.** Rooftops are your highway at dusk. |
+| ![Sprinting on all fours](docs/screenshots/sprint.png) <br> **Drop to all fours** and build up to 30 m/s down the avenues. | ![Charged leap by day](docs/screenshots/leap-day.png) <br> **Charged leaps** launch you wherever you're looking. |
+| ![Mid-transformation](docs/screenshots/transform.png) <br> **Transform at will.** Bones crack, a roar, a shockwave. | ![Full moon over the lake](docs/screenshots/full-moon-lake.png) <br> **The full moon** forces the change every third night. |
+| ![Vampires attack](docs/screenshots/vampires.png) <br> **Vampires** prey on civilians at night. Save them, or don't. | ![Hunters open fire](docs/screenshots/hunters.png) <br> **Silver Dawn hunters** answer your heat with silver rifles. |
+| ![The Moon Shrine](docs/screenshots/ruins.png) <br> **The Ancient Ruins**, where you learn the Old Magic. | ![The Blackfang Alpha](docs/screenshots/alpha.png) <br> **The Blackfang Alpha** and its pack wait in the peaks. |
+| ![Map of Greyhaven](docs/screenshots/map.png) <br> **Greyhaven**: about 1.4 km square, with territory control in every district. | ![Skill tree](docs/screenshots/skills.png) <br> **Bloodline skills**: speed, armour, double jump, howl and more. |
+
+<p align="center"><img src="docs/screenshots/title.png" width="70%" alt="Title screen" /></p>
 
 ## Download / build
 
@@ -37,7 +55,8 @@ Build notes:
 npm install
 npm start          # desktop window (Electron)
 npm run serve      # or play in a browser at http://localhost:8080
-npm run smoke      # headless gameplay smoke test + screenshots (needs playwright)
+npm run smoke      # headless gameplay smoke test (needs playwright)
+npm run screenshots  # regenerate the README screenshots in docs/screenshots
 ```
 
 ## Controls
@@ -139,7 +158,8 @@ src/            game source (bundled by esbuild → app/game.js)
 app/            index.html, style.css (+ bundled game.js)
 electron/       desktop shell (main + preload)
 build/          app icon for packaging
-scripts/        build + smoke test
+scripts/        build, smoke test, README screenshots
+docs/           screenshots
 ```
 
 ## Roadmap

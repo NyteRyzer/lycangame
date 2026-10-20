@@ -334,7 +334,8 @@ export class HUD {
     const hh = Math.floor(w.time), mm = Math.floor((w.time % 1) * 60);
     $('clock').textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}  ·  DAY ${w.day}`;
     const moonEl = $('moon');
-    moonEl.textContent = w.isNight ? `☾ ${w.moonPhaseName}` : `☀ Tonight: ${w.moonPhase === 2 || (w.moonPhase === 1 && w.time > 12) ? 'FULL MOON' : w.moonPhaseName}`;
+    const tonight = ((w.day % 3) + 3) % 3; // a night belongs to the day it starts on
+    moonEl.textContent = w.isNight ? `☾ ${w.moonPhaseName}` : `☀ Tonight: ${['Waxing Crescent', 'Waxing Gibbous', 'FULL MOON'][tonight]}`;
     moonEl.classList.toggle('full', w.isFullMoonNight);
     const d = districtAt(p.pos.x, p.pos.z);
     $('district').textContent = `${d} · territory ${Math.round(r.territory[d])}%`;

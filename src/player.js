@@ -717,7 +717,7 @@ export class Player {
   }
 
   _animate(dt) {
-    this.fill.intensity = this.game.world.nightFactor * 22;
+    this.fill.intensity = this.game.world.nightFactor * 35;
     this.root.position.copy(this.pos);
     this.root.rotation.y = this.yaw;
     if (this.human.root.visible) {

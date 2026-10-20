@@ -133,12 +133,12 @@ function makeWindowTexture(lit) {
   const g = c.getContext('2d');
   const rnd = mulberry32(lit ? 99 : 7);
   // the emissive map keeps a faint base so facades read as city light at night
-  g.fillStyle = lit ? '#181a20' : '#5b5f66';
+  g.fillStyle = lit ? '#181a20' : '#b4b8c0';
   g.fillRect(0, 0, 256, 256);
   if (!lit) {
     // subtle concrete noise
     for (let i = 0; i < 1500; i++) {
-      const v = 80 + rnd() * 30;
+      const v = 150 + rnd() * 40;
       g.fillStyle = `rgba(${v},${v},${v + 5},0.25)`;
       g.fillRect(rnd() * 256, rnd() * 256, 2, 2);
     }
@@ -1059,7 +1059,8 @@ export class World {
     // sun arc
     const sunAng = ((this.time - 6) / 12) * Math.PI;
     const sunDir = new THREE.Vector3(Math.cos(sunAng), Math.sin(sunAng), 0.35).normalize();
-    const moonDir = new THREE.Vector3(-Math.cos(sunAng) * 0.8, Math.max(0.25, -Math.sin(sunAng)), -0.5).normalize();
+    // the moon hangs low over the northern hills so it frames the skyline
+    const moonDir = new THREE.Vector3(-Math.cos(sunAng) * 0.9, 0.42 + 0.25 * Math.max(0, -Math.sin(sunAng)), -0.75).normalize();
     this.moonDir = moonDir;
     const lightDir = nf > 0.5 ? moonDir : sunDir;
 
