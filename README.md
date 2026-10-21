@@ -1,6 +1,6 @@
 # Sunnyvale Showdown
 
-An unofficial Trailer Park Boys fan parody fighting game in a 2D animated cartoon style. One HTML file with no build step and no dependencies. Every character, sound and stage prop is drawn or synthesized in code.
+An unofficial Trailer Park Boys fan parody fighting game drawn in a 2D comic-book sprite style. One HTML file with no build step and no dependencies. Every character, sound and stage prop is drawn or synthesized in code.
 
 **To play:** open `index.html` in a browser. You can also serve the folder with something like `npx serve .`.
 
