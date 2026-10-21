@@ -769,7 +769,7 @@ function pushApart(a, b) {
   const skip = s => s === 'down' || s === 'ko' || s === 'launched' || s === 'getup';
   if (skip(a.state) || skip(b.state)) return;
   if ((a.atk && a.atk.pass) || (b.atk && b.atk.pass)) return;
-  const dx = b.x - a.x, min = 46;
+  const dx = b.x - a.x, min = 62;
   if (Math.abs(dx) < min && Math.abs(a.y - b.y) < 110) {
     const push = (min - Math.abs(dx)) / 2, s = dx === 0 ? (a.side === 0 ? 1 : -1) : Math.sign(dx);
     a.x = clamp(a.x - s * push, 36, W - 36); b.x = clamp(b.x + s * push, 36, W - 36);
@@ -1101,7 +1101,93 @@ const ALT = {
   ricky: { pattern: null, shirt: '#7a8a5c', pants: '#3a2a22' }, julian: { shirt: '#5a1f1f' }, bubbles: { pattern: null, shirt: '#8a3f5e' },
   lahey: { shirt: '#c9b48a' }, randy: { pants: '#5a4632' }, jroc: { shirt: '#e8c33a', cap: '#2b2b2b' },
 };
-for (const d of ROSTER) { d.look = STYLE[d.id]; d.alt = ALT[d.id]; }
+for (const d of ROSTER) { d.look = STYLE[d.id]; d.look.id = d.id; d.alt = ALT[d.id]; }
+
+// Hand-drawn sprite art cut from the reference sheet. Each frame says which way the art
+// faces, how tall it stands in game units, where the feet sit (fraction of width), and
+// where the face is for portraits. Fighters without sprites fall back to the comic rig.
+const SPRITE_DEFS = {
+  ricky: { head: [0.18, 0.0, 0.62, 0.27], frames: {
+    idle: { right: true, h: 192, ax: 0.42 }, attack: { right: true, h: 166, ax: 0.45 }, run: { right: true, h: 142, ax: 0.5 } } },
+  julian: { head: [0.28, 0.0, 0.5, 0.25], frames: {
+    idle: { right: false, h: 192, ax: 0.48 }, attack: { right: true, h: 170, ax: 0.42 }, run: { right: true, h: 146, ax: 0.5 } } },
+  bubbles: { head: [0.2, 0.03, 0.62, 0.33], frames: {
+    idle: { right: false, h: 188, ax: 0.5 }, attack: { right: true, h: 128, ax: 0.26 }, run: { right: true, h: 128, ax: 0.5 } } },
+};
+const SPRITES = {};
+function loadSprites(done) {
+  const jobs = [];
+  for (const id in SPRITE_DEFS) for (const fr in SPRITE_DEFS[id].frames) {
+    jobs.push(new Promise(res => {
+      const img = new Image();
+      img.onload = () => { (SPRITES[id] = SPRITES[id] || {})[fr] = img; res(); };
+      img.onerror = () => res();
+      img.src = `sprites/${id}_${fr}.webp`;
+    }));
+  }
+  Promise.all(jobs).then(() => {
+    for (const id in SPRITE_DEFS) if (!SPRITES[id] || Object.keys(SPRITES[id]).length < 3) delete SPRITES[id];
+    done();
+  });
+}
+const hasSprite = id => !!SPRITES[id];
+function spriteFrame(f) {
+  const a = f.atk, st = f.state, id = f.def.id;
+  if (st === 'rush') return 'attack';
+  if (a) {
+    if (id === 'bubbles' && a.id !== 'cart' && a.id !== 'throw') return 'run';
+    return 'attack';
+  }
+  if (st === 'jump') return 'run';
+  if (st === 'walk' && !f.holdBack) return 'run';
+  return 'idle';
+}
+function drawSpriteFighter(f, opts) {
+  const id = f.def.id, D = SPRITE_DEFS[id], frame = spriteFrame(f), cfg = D.frames[frame], img = SPRITES[id][frame];
+  const sc = opts.scale || 1, t = f.anim || 0, st = f.state;
+  c.save();
+  c.translate(f.x, f.y);
+  if (!opts.noShadow) {
+    const lift = G.scene === 'fight' ? Math.max(0, FLOOR - f.y) : 0, s = Math.max(0.35, 1 - lift / 260);
+    c.fillStyle = 'rgba(0,0,0,0.4)'; c.beginPath(); c.ellipse(0, lift, 46 * s * sc, 9 * s * sc, 0, 0, Math.PI * 2); c.fill();
+  }
+  const dir = f.facing * (cfg.right ? 1 : -1);
+  c.scale(sc, sc);
+  // fake animation on top of the still frames
+  let rot = 0, sx = 1, sy = 1, dy = 0;
+  const sq = f.sq || 1; sx *= 1 + (1 - sq) * 0.6; sy *= sq;
+  if (st === 'idle' || st === 'blockstun' || st === 'getup') { sy *= 1 + Math.sin(t * 0.1) * 0.012; }
+  if (st === 'walk') { if (f.holdBack) rot = -0.08 * f.facing; else dy = -Math.abs(Math.sin(t * 0.3)) * 5; }
+  if (st === 'run' || (st === 'walk' && !f.holdBack)) sx *= 1 + Math.sin(t * 0.3) * 0.02;
+  if (st === 'jump') rot = (f.vy < 0 ? -0.12 : 0.1) * f.facing;
+  if (st === 'hitstun') rot = -0.22 * f.facing;
+  if (st === 'blockstun') rot = -0.1 * f.facing;
+  if (st === 'launched') rot = -0.9 * f.facing;
+  if (st === 'down' || st === 'ko') rot = -Math.PI / 2 * f.facing;
+  if (st === 'win') dy = -Math.abs(Math.sin(t * 0.14)) * 12;
+  if (f.atk) { const a = f.atk, ph = f.atkT <= a.s ? 's' : f.atkT <= a.s + a.a ? 'a' : 'r'; if (ph === 's') rot = -0.05 * f.facing; if (ph === 'a' && !a.dash) { rot = 0.06 * f.facing; c.translate(f.facing * 6, 0); } }
+  if (f.dizzy > 0 && st !== 'ko') rot += Math.sin(t * 0.15) * 0.06;
+  if (st === 'down' || st === 'ko') c.translate(f.facing * 95, -36);
+  else if (st === 'launched') c.translate(0, -30);
+  c.translate(0, dy);
+  c.rotate(rot);
+  c.scale(dir * sx, sy);
+  const hgt = cfg.h, wid = hgt * img.width / img.height;
+  if (f.look !== f.def.look && 'filter' in c) c.filter = 'brightness(0.78) contrast(1.15) sepia(0.25)';
+  c.drawImage(img, -wid * cfg.ax, -hgt, wid, hgt);
+  if (f.flash > 0 && f.flash % 4 < 2) { c.globalCompositeOperation = 'lighter'; c.globalAlpha = 0.5; c.drawImage(img, -wid * cfg.ax, -hgt, wid, hgt); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; }
+  if ('filter' in c) c.filter = 'none';
+  c.restore();
+  // motion smears in world space
+  const a = f.atk, act = a && f.atkT > a.s && f.atkT <= a.s + a.a;
+  if (act || st === 'rush') {
+    c.save(); c.translate(f.x, f.y); c.scale(f.facing * sc, sc);
+    if (a && a.dash) drawSmear('dash', 0, 0, f);
+    else if (a && (a.id === 'kick' || a.id === 'airkick')) drawSmear('kick', 6, -76, f);
+    else drawSmear('punch', 78, -128, f);
+    c.restore();
+  }
+}
 
 const PAT = {};
 function makePatterns() {
@@ -1589,6 +1675,7 @@ function brighten(L) {
   return BRIGHT.get(L);
 }
 function drawFighter(f, opts = {}) {
+  if (f.def && hasSprite(f.def.id)) return drawSpriteFighter(f, opts);
   const L = f.flash > 0 && f.flash % 4 < 2 ? brighten(f.look) : f.look;
   const p = smoothPose(f, getPose(f)), sc = opts.scale || 1;
   c.save();
@@ -1621,7 +1708,7 @@ function drawFighter(f, opts = {}) {
   c.restore();
   if (act && (a.id === 'kick' || a.id === 'airkick')) drawSmear('kick', 8, hipY, f);
   c.restore();
-  if (f.atk && f.atk.id === 'cart') drawCart(f.x + f.facing * 44, f.y, f.facing, f.anim);
+  if (f.atk && f.atk.id === 'cart' && !hasSprite(f.def.id)) drawCart(f.x + f.facing * 44, f.y, f.facing, f.anim);
 }
 
 function drawCart(x, y, dir, t) {
@@ -1673,7 +1760,7 @@ function drawCar(x, y, dir, t) {
   c.strokeStyle = OUT; c.lineWidth = 3;
   // driver: Ricky, obviously
   c.fillStyle = '#2a3440'; c.beginPath(); c.moveTo(2, -14); c.lineTo(2, -38); c.lineTo(31, -38); c.lineTo(48, -14); c.closePath(); c.fill();
-  c.save(); c.scale(0.62, 0.62); drawHead(ROSTER[0].look, 'happy', 28, -38); c.restore();
+  if (hasSprite('ricky')) drawPortrait(ROSTER[0].look, 20, -26, 0.5, false); else { c.save(); c.scale(0.62, 0.62); drawHead(ROSTER[0].look, 'happy', 28, -38); c.restore(); }
   // body
   c.fillStyle = '#6e1f1f'; rrect(-98, -14, 196, 34, 8); c.fill(); c.stroke();
   c.fillStyle = '#8a4b22'; c.beginPath(); c.ellipse(-62, 6, 14, 6, 0.3, 0, Math.PI * 2); c.fill(); c.beginPath(); c.ellipse(70, -4, 9, 5, -0.2, 0, Math.PI * 2); c.fill();
@@ -1925,6 +2012,13 @@ function drawStage() {
 //  DRAWING: HUD + screens
 // =====================================================================
 function drawPortrait(L, x, y, s, flip, face = 'n') {
+  if (L.id && hasSprite(L.id)) {
+    const img = SPRITES[L.id].idle, D = SPRITE_DEFS[L.id], [hx, hy, hw] = D.head, size = 44 * s;
+    const sw = img.width * hw, sh = sw, sx = img.width * hx, sy = img.height * hy;
+    const mirror = (flip ? -1 : 1) * (D.frames.idle.right ? 1 : -1);
+    c.save(); c.translate(x, y); c.scale(mirror, 1); c.drawImage(img, sx, sy, sw, sh, -size / 2, -size / 2, size, size); c.restore();
+    return;
+  }
   c.save(); c.translate(x, y); c.scale(flip ? -s : s, s); drawHead(L, face, 0, 0, { blink: G.frame % 200 < 7 }); c.restore();
 }
 function drawHUD() {
@@ -2166,7 +2260,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 let booted = false;
-function boot() { if (booted) return; booted = true; makePatterns(); buildStage(); requestAnimationFrame(t => { last = t; loop(t); }); }
+function boot() { if (booted) return; booted = true; makePatterns(); buildStage(); loadSprites(() => requestAnimationFrame(t => { last = t; loop(t); })); }
 if (document.fonts && document.fonts.load) {
   Promise.all([document.fonts.load(`20px "Bungee"`), document.fonts.load(`700 20px "Barlow Condensed"`)]).catch(() => {}).then(boot);
   setTimeout(boot, 2500);

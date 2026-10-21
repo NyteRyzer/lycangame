@@ -1,8 +1,14 @@
 # Sunnyvale Showdown
 
-An unofficial Trailer Park Boys fan parody fighting game drawn in a 2D comic-book sprite style. One HTML file with no build step and no dependencies. Every character, sound and stage prop is drawn or synthesized in code.
+An unofficial Trailer Park Boys fan parody fighting game drawn in a 2D comic-book sprite style. It has no build step and no dependencies.
 
 **To play:** open `index.html` in a browser. You can also serve the folder with something like `npx serve .`.
+
+## Art
+
+Ricky, Julian and Bubbles use hand-drawn sprites cut from `art/reference-sheet.jpg` (idle, attack and run poses for each). Mr. Lahey, Randy and J-Roc are still drawn in code in a matching comic style until they get their own sheet. Sounds and the stage are generated in code.
+
+To re-cut the sprites after changing the sheet, run `python3 tools/cut_sprites.py`. It needs Pillow, NumPy and SciPy. The crop boxes at the top of the script say where each pose sits on the sheet.
 
 ## The Boys
 
