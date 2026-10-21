@@ -27,7 +27,8 @@ export class Reputation {
     this.territory = Object.fromEntries(DISTRICTS.map((d) => [d, d === 'Northwood Forest' ? 10 : 0]));
     this.packAllied = false;
     this.huntersProvoked = 0;
-    this.stats = { civiliansKilled: 0, civiliansSaved: 0, monstersSlain: 0, huntersKilled: 0, eventsWon: 0 };
+    this.policeProvoked = 0;
+    this.stats = { civiliansKilled: 0, civiliansSaved: 0, monstersSlain: 0, huntersKilled: 0, eventsWon: 0, policeKilled: 0, animalsHunted: 0 };
     this.lastWitness = 99;
   }
 
@@ -65,7 +66,7 @@ export class Reputation {
   witnessed(dt, civ) {
     this.lastWitness = 0;
     if (this.morality >= 50) return; // they know you as their guardian
-    const mult = this.morality < -30 ? 1.5 : this.morality > 20 ? 0.5 : 1;
+    const mult = (this.morality < -30 ? 1.5 : this.morality > 20 ? 0.5 : 1) * (this.game.player.isHybrid ? 0.5 : 1);
     this.addHeat(0.05 * dt * mult * 6);
   }
 
@@ -83,6 +84,17 @@ export class Reputation {
 
   provokeHunters() {
     this.huntersProvoked = 20;
+  }
+
+  // police: monsters past 1 heat, or anyone who shoots back
+  policeHostile() {
+    if (this.policeProvoked > 0) return true;
+    if (this.game.player.isWolf) return this.heat >= 1;
+    return this.heat >= 3; // Blend In: in human form they don't know your face
+  }
+
+  provokePolice() {
+    this.policeProvoked = 25;
   }
 
   onKill(o, source) {
@@ -118,6 +130,18 @@ export class Reputation {
       this.claim(d, 5);
     } else if (o.type === 'alpha') {
       this.stats.monstersSlain++;
+    } else if (o.type === 'police') {
+      this.stats.policeKilled++;
+      this.changeMorality(-3, 'Officer down');
+      this.changeFaction('citizens', -3);
+      this.addHeat(0.8);
+    } else if (o.type === 'ghoul' || o.type === 'witch' || o.type === 'demon') {
+      this.stats.monstersSlain++;
+      this.changeMorality(o.type === 'demon' ? 8 : o.type === 'witch' ? 3 : 1, o.type === 'demon' ? 'Demon banished' : null);
+      this.changeFaction('citizens', o.type === 'demon' ? 8 : 1);
+      this.claim(d, o.type === 'demon' ? 20 : 3);
+    } else if (o.def?.animal) {
+      this.stats.animalsHunted++;
     }
   }
 
@@ -146,7 +170,9 @@ export class Reputation {
     this.lastWitness += dt;
     this.huntersProvoked -= dt;
     // heat fades while unseen — faster when you look human
-    if (this.lastWitness > 6) this.addHeat(-dt * (p.isWolf ? 0.025 : 0.08));
+    this.policeProvoked -= dt;
+    // Blend In: as a human you vanish into the crowd three times faster
+    if (this.lastWitness > 6) this.addHeat(-dt * (p.isWolf ? 0.025 : 0.24));
     // standing in your own territory makes the beast stronger: handled by HUD display only
   }
 
@@ -170,7 +196,10 @@ const STORY = [
   { id: 'sprint', text: 'Run free. Hold Shift as the beast to drop to all fours.' },
   { id: 'climb', text: 'Own the skyline. Run into a building to climb it.' },
   { id: 'leap', text: 'Hold Space, then release, for a charged leap.' },
+  { id: 'hybrid', text: 'Find the balance between man and wolf. Press 2 for your hybrid form.' },
+  { id: 'wallrun', text: 'Sprint and jump alongside a wall to run along it. Jump again to kick off.' },
   { id: 'howl', text: 'Let the city hear you. Press Q to howl.' },
+  { id: 'vantage', text: 'Climb a red-beacon Spire and press E to survey the city.', marker: 'vantage' },
   { id: 'shrine', text: 'Seek the Ancient Ruins in Northwood and learn the Old Magic (E).', marker: 'ruins' },
   { id: 'choose', text: 'Greyhaven is watching. Answer events and contracts as you see fit.' },
   { id: 'alpha', text: 'The Blackfang Alpha demands your submission. Defeat it at its den.', marker: 'den' },
@@ -194,7 +223,8 @@ export class Director {
     this.eventSeq = 1;
 
     game.events.on('transform', ({ to }) => {
-      if (to === 'wolf') this._complete('transform');
+      if (to === 'wolf' || to === 'hybrid') this._complete('transform');
+      if (to === 'hybrid') this._complete('hybrid');
     });
     game.events.on('howl', () => this._complete('howl'));
   }
@@ -214,8 +244,18 @@ export class Director {
 
   objectiveMarker() {
     const o = this.objective;
+    if (o?.marker === 'vantage') {
+      const p = this.game.player.pos;
+      let best = null;
+      for (const v of this.game.world.vantages) if (!v.done && (!best || v.pos.distanceTo(p) < best.pos.distanceTo(p))) best = v;
+      return best ? { x: best.pos.x, z: best.pos.z, name: best.name } : null;
+    }
     if (o?.marker) return LANDMARKS[o.marker];
     return null;
+  }
+
+  onTraversal(kind) {
+    if (kind === 'wallrun') this._complete('wallrun');
   }
 
   markers() {
@@ -234,19 +274,21 @@ export class Director {
     const p = g.player.pos;
     const district = districtAt(p.x, p.z);
     const kinds = [];
-    if (w.isNight) kinds.push('vampireAttack', 'vampireAttack');
+    if (w.isNight) kinds.push('vampireAttack', 'vampireAttack', 'ghoulSwarm');
     kinds.push('hunterPatrol');
     if (district === 'Northwood Forest' || district === 'Ashen Peaks' || Math.random() < 0.3) kinds.push('rivalPack');
+    if (w.isNight && (district === 'Northwood Forest' || Math.random() < 0.25)) kinds.push('coven');
+    if (w.isNight && this.step >= STORY.findIndex((s) => s.id === 'choose')) kinds.push('hellgate');
     const kind = pick(kinds);
     let pos = null;
-    if (kind === 'vampireAttack') {
+    if (kind === 'vampireAttack' || kind === 'ghoulSwarm' || kind === 'hellgate') {
       const pts = w.spawnPoints.sidewalks.filter((s) => {
         const d = s.distanceTo(p);
         return d > 60 && d < 220;
       });
       if (!pts.length) return;
       pos = pick(pts).clone();
-    } else if (kind === 'rivalPack') {
+    } else if (kind === 'rivalPack' || kind === 'coven') {
       const pts = w.spawnPoints.forest.filter((s) => {
         const d = s.distanceTo(p);
         return d > 70 && d < 260;
@@ -281,6 +323,26 @@ export class Director {
         const h = npcs.spawn('hunter', pos.clone().add(new THREE.Vector3(rand(-6, 6), 0, rand(-6, 6))), { eventId: id, state: 'pursue' });
         e.npcs.push(h);
       }
+    } else if (kind === 'ghoulSwarm') {
+      e.title = 'Ghoul Swarm';
+      e.desc = 'The hungry dead have crawled up from Hollow Hill. Put them back.';
+      e.timeLimit = 150;
+      for (let i = 0; i < 3; i++) e.victims.push(npcs.spawn('civilian', pos.clone().add(new THREE.Vector3(rand(-6, 6), 0, rand(-6, 6))), { eventId: id, state: 'flee' }));
+      for (let i = 0; i < 8; i++) e.npcs.push(npcs.spawn('ghoul', pos.clone().add(new THREE.Vector3(rand(-12, 12), 0, rand(-12, 12))), { eventId: id, state: 'hunt' }));
+    } else if (kind === 'coven') {
+      e.title = 'Coven Ritual';
+      e.desc = 'Witches are chanting in Northwood. Break their circle before the ritual completes.';
+      e.timeLimit = 180;
+      for (let i = 0; i < 3; i++) e.npcs.push(npcs.spawn('witch', pos.clone().add(new THREE.Vector3(Math.cos(i * 2.1) * 8, 0, Math.sin(i * 2.1) * 8)), { eventId: id, state: 'guard' }));
+      for (let i = 0; i < 3; i++) e.npcs.push(npcs.spawn('ghoul', pos.clone().add(new THREE.Vector3(rand(-6, 6), 0, rand(-6, 6))), { eventId: id, state: 'guard' }));
+    } else if (kind === 'hellgate') {
+      e.title = 'Hellgate';
+      e.desc = 'A rift has torn open the street and something enormous is stepping through.';
+      e.timeLimit = 240;
+      e.npcs.push(npcs.spawn('demon', pos.clone(), { eventId: id, state: 'hunt' }));
+      for (let i = 0; i < 4; i++) e.npcs.push(npcs.spawn('ghoul', pos.clone().add(new THREE.Vector3(rand(-10, 10), 0, rand(-10, 10))), { eventId: id, state: 'hunt' }));
+      g.fx.ring(pos, 14, '#ff3a1a', 1.5);
+      g.decals?.crater(pos, 5);
     } else {
       e.title = 'Rival Pack';
       e.desc = 'Blackfang wolves are marking territory. Drive them off.';
@@ -313,6 +375,23 @@ export class Director {
       } else if (e.kind === 'hunterPatrol') {
         g.player.addXP(100);
         rep.claim(d, 10);
+      } else if (e.kind === 'ghoulSwarm') {
+        const saved = e.victims.filter((v) => !v.dead).length;
+        rep.stats.civiliansSaved += saved;
+        rep.changeMorality(3 + saved * 2, 'The dead stay buried');
+        g.player.addXP(110);
+        rep.claim(d, 12);
+      } else if (e.kind === 'coven') {
+        g.player.addXP(150);
+        rep.changeMorality(4, 'The coven is broken');
+        rep.claim(d, 15);
+      } else if (e.kind === 'hellgate') {
+        g.player.addXP(300);
+        g.player.skillPoints++;
+        rep.changeMorality(10, 'The Hellgate is sealed');
+        rep.changeFaction('citizens', 12);
+        rep.claim(d, 25);
+        g.hud.toast('Hellgate sealed: +1 skill point', 'gold', 3);
       } else {
         g.player.addXP(120);
         rep.changeFaction('pack', -8);
@@ -479,7 +558,8 @@ export class Director {
     if (dShrine < 6) {
       if (!p.hasMoonfire) {
         g.hud.prompt(g.world.isNight ? 'E — Commune with the Moon Shrine' : 'The shrine is dormant. Return at night.');
-        if (g.world.isNight && g.input.hit('interact')) {
+        if (g.world.isNight && g.input.hit('interact') && !g.interactConsumed) {
+          g.interactConsumed = true;
           p.hasMoonfire = true;
           g.audio.magic();
           g.audio.chime();
@@ -491,6 +571,8 @@ export class Director {
       }
     }
     if (obj?.id === 'shrine' && p.hasMoonfire) this._complete('shrine');
+
+    this._updateWorldInteractions(dt);
 
     // the alpha waits at the den once the story reaches it
     if (obj?.id === 'alpha' && !this.alphaSpawned) {
@@ -545,8 +627,66 @@ export class Director {
     }
   }
 
+  // vantage points, moonstones and the safehouse
+  _updateWorldInteractions(dt) {
+    const g = this.game;
+    const p = g.player;
+    const w = g.world;
+    const E = () => g.input.hit('interact') && !g.interactConsumed && (g.interactConsumed = true);
+    for (const v of w.vantages) {
+      if (v.done) continue;
+      if (Math.hypot(p.pos.x - v.pos.x, p.pos.z - v.pos.z) < 6 && Math.abs(p.pos.y - v.pos.y) < 3) {
+        g.hud.prompt(`E: Survey Greyhaven from the ${v.name}`);
+        if (E()) {
+          v.done = true;
+          v.beacon.visible = false;
+          g.hud.reveal(v.pos, 420);
+          p.addXP(60);
+          g.audio.howl(0.7);
+          if (p.isBeast) p.wolf.howlT = 1.6;
+          g.hud.toast(`${v.name} surveyed: the surrounding area is revealed.`, 'gold', 3);
+          this._complete('vantage');
+        }
+      }
+    }
+    for (const st of w.moonstones) {
+      if (st.taken || st.pos.distanceTo(p.pos.clone().setY(p.pos.y + 1)) > 2.4) continue;
+      st.taken = true;
+      p.moonstones++;
+      g.audio.chime();
+      g.fx.burst(st.pos, { count: 30, color: new THREE.Color('#9fe8ff'), speed: 5, size: 0.4, life: 0.8, gravity: 0 });
+      let msg = `Moonstone ${p.moonstones}/${w.moonstones.length}`;
+      if (p.moonstones % 4 === 0) {
+        p.skillPoints++;
+        p.hpBonus += 0.05;
+        msg += ': +1 skill point, +5% max health';
+      }
+      g.hud.toast(msg, 'gold', 2.5);
+    }
+    const home = w.safehouse.pos;
+    if (Math.hypot(p.pos.x - home.x, p.pos.z - home.z) < 4 && p.pos.y < 2) {
+      g.hud.prompt(`E: Rest at the safehouse (sleep until ${w.isNight ? 'morning' : 'dusk'}, heal, save)`);
+      if (E()) {
+        if (w.isNight) {
+          if (w.time > 12) w.day += 1;
+          w.time = 7;
+        } else w.time = 19.4;
+        p.healthFrac = 1;
+        g.rep.heat = 0;
+        g.save();
+        g.hud.fadeSleep();
+        g.hud.toast('You rest. Game saved.', 'gold', 2.5);
+      }
+    }
+  }
+
   serialize() {
-    return { step: this.step, alphaDefeated: this.alphaDefeated, contractsDone: this.contractsDone, doneContracts: this.doneContracts || [] };
+    const w = this.game.world;
+    return {
+      step: this.step, alphaDefeated: this.alphaDefeated, contractsDone: this.contractsDone, doneContracts: this.doneContracts || [],
+      vantages: w.vantages.filter((v) => v.done).map((v) => v.name),
+      moonstones: w.moonstones.map((m, i) => (m.taken ? i : -1)).filter((i) => i >= 0),
+    };
   }
 
   load(d) {
@@ -556,5 +696,12 @@ export class Director {
     this.contractsDone = d.contractsDone;
     this.doneContracts = d.doneContracts;
     if (this.step === STORY.findIndex((s) => s.id === 'alpha')) this.alphaSpawned = false;
+    const w = this.game.world;
+    for (const v of w.vantages) if (d.vantages?.includes(v.name)) {
+      v.done = true;
+      v.beacon.visible = false;
+      this.game.hud.reveal(v.pos, 420);
+    }
+    for (const i of d.moonstones || []) if (w.moonstones[i]) w.moonstones[i].taken = true;
   }
 }

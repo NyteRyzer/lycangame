@@ -138,10 +138,111 @@ export class Audio {
     this._tone(0.6, { type: 'sine', freq: 70, freqEnd: 30, gain: 0.8 });
   }
 
-  gunshot(dist = 0) {
-    const g = Math.max(0.05, 0.6 - dist / 120);
-    this._noise(0.25, { type: 'lowpass', freq: 3000, freqEnd: 300, gain: g, attack: 0.002 });
-    this._tone(0.15, { type: 'square', freq: 150, freqEnd: 40, gain: g * 0.5, filter: 800 });
+  gunshot(dist = 0, light = false) {
+    const g = Math.max(0.05, (light ? 0.4 : 0.6) - dist / 120);
+    this._noise(light ? 0.15 : 0.25, { type: 'lowpass', freq: light ? 4500 : 3000, freqEnd: 300, gain: g, attack: 0.002 });
+    this._tone(0.15, { type: 'square', freq: light ? 260 : 150, freqEnd: 40, gain: g * 0.5, filter: 800 });
+  }
+
+  snarl() {
+    this._noise(0.6, { type: 'bandpass', freq: 500, freqEnd: 250, q: 3, gain: 0.45, attack: 0.04 });
+    this._tone(0.5, { type: 'sawtooth', freq: 140, freqEnd: 90, gain: 0.18, filter: 700 });
+  }
+
+  parry() {
+    this._tone(0.5, { type: 'triangle', freq: 1800, freqEnd: 1200, gain: 0.25 });
+    this._tone(0.4, { type: 'sine', freq: 2700, gain: 0.12, delay: 0.02 });
+    this._noise(0.08, { type: 'highpass', freq: 3000, gain: 0.4 });
+  }
+
+  block() {
+    this._noise(0.1, { type: 'lowpass', freq: 700, gain: 0.35 });
+  }
+
+  sense(on) {
+    this._tone(0.6, { type: 'sine', freq: on ? 220 : 440, freqEnd: on ? 440 : 220, gain: 0.12 });
+  }
+
+  lock() {
+    this._tone(0.08, { type: 'square', freq: 880, gain: 0.06, filter: 2000 });
+  }
+
+  slide() {
+    this._noise(0.6, { type: 'bandpass', freq: 900, freqEnd: 400, q: 1, gain: 0.25, attack: 0.02 });
+  }
+
+  grab() {
+    this._noise(0.15, { type: 'lowpass', freq: 500, gain: 0.35 });
+  }
+
+  gore() {
+    this._noise(0.35, { type: 'lowpass', freq: 600, freqEnd: 200, gain: 0.6 });
+    for (let i = 0; i < 4; i++) this._noise(0.05, { type: 'highpass', freq: 1500, gain: 0.25, delay: 0.05 + i * 0.06 });
+  }
+
+  cast() {
+    this._tone(0.5, { type: 'sawtooth', freq: 300, freqEnd: 900, gain: 0.08, filter: 1600 });
+    this._noise(0.4, { type: 'bandpass', freq: 1800, q: 4, gain: 0.08 });
+  }
+
+  ghoul(dist = 0) {
+    const g = Math.max(0.02, 0.2 - dist / 100);
+    this._noise(0.3, { type: 'bandpass', freq: 400 + Math.random() * 300, q: 6, gain: g });
+  }
+
+  splash() {
+    this._noise(1.2, { type: 'highpass', freq: 1200, gain: 0.25, attack: 0.05 });
+  }
+
+  crash() {
+    this._noise(0.5, { type: 'lowpass', freq: 2500, freqEnd: 300, gain: 0.6 });
+    for (let i = 0; i < 5; i++) this._noise(0.08, { type: 'highpass', freq: 4000, gain: 0.2, delay: 0.05 + i * 0.05 });
+  }
+
+  explosion() {
+    this._noise(1.6, { type: 'lowpass', freq: 900, freqEnd: 60, gain: 1, attack: 0.005 });
+    this._tone(1.0, { type: 'sine', freq: 60, freqEnd: 25, gain: 0.8 });
+  }
+
+  thud(heavy = false) {
+    this._noise(heavy ? 0.3 : 0.15, { type: 'lowpass', freq: heavy ? 400 : 900, gain: heavy ? 0.5 : 0.25 });
+  }
+
+  horn() {
+    this._tone(0.4, { type: 'square', freq: 392, gain: 0.06, filter: 1500 });
+    this._tone(0.4, { type: 'square', freq: 494, gain: 0.05, filter: 1500 });
+  }
+
+  carAlarm(dist = 0) {
+    const g = Math.max(0.01, 0.12 - dist / 700);
+    this._tone(0.22, { type: 'square', freq: 1000, freqEnd: 1600, gain: g, filter: 3000 });
+  }
+
+  siren(dist = 0) {
+    const g = Math.max(0.02, 0.12 - dist / 900);
+    for (let i = 0; i < 4; i++) this._tone(0.5, { type: 'sawtooth', freq: 700, freqEnd: 1100, gain: g, delay: i * 0.5, filter: 2500 });
+  }
+
+  thunder(delay = 0, power = 1) {
+    this._noise(3, { type: 'lowpass', freq: 300, freqEnd: 60, gain: 0.7 * power, attack: 0.08, delay });
+    this._noise(0.4, { type: 'lowpass', freq: 1500, freqEnd: 200, gain: 0.5 * power, delay });
+  }
+
+  setRain(level) {
+    if (!this.ctx) return;
+    if (!this.rainGain) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this.noiseBuf;
+      src.loop = true;
+      const f = this.ctx.createBiquadFilter();
+      f.type = 'highpass';
+      f.frequency.value = 1200;
+      this.rainGain = this.ctx.createGain();
+      this.rainGain.gain.value = 0;
+      src.connect(f).connect(this.rainGain).connect(this.master);
+      src.start();
+    }
+    this.rainGain.gain.setTargetAtTime(level * 0.12, this.ctx.currentTime, 0.5);
   }
 
   scream(dist = 0) {

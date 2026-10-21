@@ -2,15 +2,21 @@
 import * as THREE from 'three';
 import { Audio } from './audio.js';
 import { CameraRig } from './camera.js';
-import { FX } from './fx.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { Decals, FX } from './fx.js';
 import { HUD } from './hud.js';
 import { Input } from './input.js';
 import { NPCManager } from './npcs.js';
 import { Player } from './player.js';
+import { PropSystem } from './props.js';
 import { Director, EventBus, Reputation } from './story.js';
+import { Weather } from './weather.js';
 import { LANDMARKS, World } from './world.js';
 
-const SAVE_KEY = 'lycan-save-v1';
+const SAVE_KEY = 'lycan-save-v2';
 const SETTINGS_KEY = 'lycan-settings-v1';
 const $ = (id) => document.getElementById(id);
 
@@ -41,8 +47,15 @@ class Game {
     this.renderer.toneMappingExposure = 1.0;
     this.scene = new THREE.Scene();
     this.camera3 = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 4000);
+    // bloom makes eyes, neon, the moon and magic glow
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera3));
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), 0.55, 0.5, 0.82);
+    this.composer.addPass(this.bloom);
+    this.composer.addPass(new OutputPass());
     addEventListener('resize', () => {
       this.renderer.setSize(innerWidth, innerHeight);
+      this.composer.setSize(innerWidth, innerHeight);
       this.camera3.aspect = innerWidth / innerHeight;
       this.camera3.updateProjectionMatrix();
     });
@@ -53,6 +66,9 @@ class Game {
     this.world = new World(this.scene);
     this.landmarks = LANDMARKS;
     this.fx = new FX(this.scene);
+    this.decals = new Decals(this.scene, this.world);
+    this.weather = new Weather(this);
+    this.props = new PropSystem(this);
     this.camera = new CameraRig(this.camera3, this.world);
     this.hud = new HUD(this);
     this.rep = new Reputation(this);
@@ -66,6 +82,10 @@ class Game {
     this.started = false;
     this.clock = new THREE.Clock();
     this.fpsSmoothed = 60;
+    this.slowmoT = 0;
+    this.slowmoScale = 1;
+    this.photo = false;
+    this.interactConsumed = false;
 
     this._loadSettings();
     this._wireMenus();
@@ -83,13 +103,14 @@ class Game {
 
   _loadSettings() {
     const s = storageGet(SETTINGS_KEY) || {};
-    this.settings = { sens: 1, vol: 0.7, fov: 70, invert: false, shadows: true, ...s };
+    this.settings = { sens: 1, vol: 0.7, fov: 70, invert: false, shadows: true, bloom: true, ...s };
     this._applySettings();
     $('set-sens').value = this.settings.sens;
     $('set-vol').value = this.settings.vol;
     $('set-fov').value = this.settings.fov;
     $('set-invert').checked = this.settings.invert;
     $('set-shadows').checked = this.settings.shadows;
+    $('set-bloom').checked = this.settings.bloom;
   }
 
   _applySettings() {
@@ -99,6 +120,7 @@ class Game {
     this.audio.setVolume(s.vol);
     this.camera.baseFov = s.fov;
     this.world.sun.castShadow = s.shadows;
+    this.bloom.enabled = s.bloom;
     storageSet(SETTINGS_KEY, s);
   }
 
@@ -114,6 +136,7 @@ class Game {
     bind('set-fov', 'fov', (t) => parseFloat(t.value));
     bind('set-invert', 'invert', (t) => t.checked);
     bind('set-shadows', 'shadows', (t) => t.checked);
+    bind('set-bloom', 'bloom', (t) => t.checked);
 
     $('btn-new').onclick = () => this.start(false);
     $('btn-continue').onclick = () => this.start(true);
@@ -144,7 +167,7 @@ class Game {
     this.setPaused(false);
     if (!continueGame) {
       this.hud.toast('Greyhaven. The night you were bitten, everything changed.', 'gray', 5);
-      setTimeout(() => this.hud.toast('Click to capture the mouse. Esc to pause.', 'gray', 4), 1500);
+      setTimeout(() => this.hud.toast('Click to capture the mouse. Esc to pause. 1 / 2 / 3 switch forms.', 'gray', 4), 1500);
     }
   }
 
@@ -164,6 +187,19 @@ class Game {
 
   openMenu(m) {
     this.setPaused(true, m);
+  }
+
+  // bullet time for parries, perfect dodges and finishers (real-time duration)
+  slowmo(scale, dur) {
+    this.slowmoScale = Math.min(this.slowmoT > 0 ? this.slowmoScale : 1, scale);
+    this.slowmoT = Math.max(this.slowmoT, dur);
+  }
+
+  togglePhoto() {
+    this.photo = !this.photo;
+    if (this.photo) this.camera.enterPhoto();
+    else this.camera.exitPhoto();
+    this.hud.showPhoto(this.photo);
   }
 
   save() {
@@ -192,13 +228,19 @@ class Game {
     const dt = Math.min(this.clock.getDelta(), 1 / 20);
     this.fpsSmoothed = this.fpsSmoothed * 0.95 + (1 / Math.max(dt, 1e-4)) * 0.05;
     this.step(dt);
-    this.renderer.render(this.scene, this.camera3);
+    this.render();
+  }
+
+  render() {
+    if (this.bloom.enabled) this.composer.render();
+    else this.renderer.render(this.scene, this.camera3);
   }
 
   // one simulation tick (separate from rendering so tests can drive it)
   step(dt) {
     const input = this.input;
     input.pollGamepad();
+    this.interactConsumed = false;
 
     if (this.started) {
       if (input.hit('pause')) {
@@ -208,7 +250,26 @@ class Game {
         this.menu === 'skills' ? this.setPaused(false) : this.openMenu('skills');
       } else if (input.hit('map')) {
         this.menu === 'map' ? this.setPaused(false) : this.openMenu('map');
+      } else if (input.hit('photo') && !this.paused) {
+        this.togglePhoto();
       }
+    }
+
+    if (this.photo && !this.paused) {
+      // the world holds its breath while you frame the shot
+      if (input.keys.has('BracketLeft')) this.world.time = (this.world.time + 24 - dt * 3) % 24;
+      if (input.keys.has('BracketRight')) this.world.time = (this.world.time + dt * 3) % 24;
+      this.world.update(0, this.camera3.position);
+      this.weather.update(0, this.camera3.position);
+      this.camera.updatePhoto(dt, input);
+      input.endFrame();
+      return;
+    }
+
+    if (this.slowmoT > 0) {
+      this.slowmoT -= dt;
+      dt *= this.slowmoScale;
+      if (this.slowmoT <= 0) this.slowmoScale = 1;
     }
 
     if (this.hitstop > 0) {
@@ -222,6 +283,9 @@ class Game {
       this.world.update(dt, this.player.pos);
       this.player.update(dt);
       this.npcs.update(dt);
+      this.props.update(dt);
+      this.weather.update(dt, this.camera3.position);
+      this.decals.update(dt);
       this.rep.update(dt);
       this.director.update(dt);
       this.camera.update(dt, this.player, input.look());

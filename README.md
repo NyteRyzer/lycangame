@@ -10,7 +10,7 @@
 
 ![The beast under the moon in downtown Greyhaven](docs/screenshots/beast.png)
 
-A third-person open-world werewolf action game. You can change between human and beast whenever you want, and the full moon forces the change. You roam **Greyhaven**: downtown towers, suburbs, an industrial district, a lake, a forest and mountains. Every choice you make pushes you toward becoming the city's protector or its greatest threat.
+A third-person open-world werewolf action game. You can shift between **human**, a half-human **hybrid** and the full **beast** whenever you want, and the full moon forces the change. You roam **Greyhaven**: downtown towers, suburbs, an industrial district, a lake, a forest and mountains. Every choice you make pushes you toward becoming the city's protector or its greatest threat.
 
 The main design goal: **moving around as the werewolf should be fun on its own, even when you're not on a mission.**
 
@@ -18,12 +18,16 @@ The main design goal: **moving around as the werewolf should be fun on its own, 
 
 | | |
 | --- | --- |
-| ![Climbing a tower](docs/screenshots/climb.png) <br> **Climb anything.** Run into a wall to scale it, then pull up onto the roof. | ![Dusk over the rooftops](docs/screenshots/rooftop-dusk.png) <br> **Own the skyline.** Rooftops are your highway at dusk. |
+| ![The hybrid form](docs/screenshots/hybrid.png) <br> **The hybrid**: half human, half wolf. Fast, agile, and it can still pass in a crowd at a distance. | ![Human form with passives](docs/screenshots/human.png) <br> **Human form** has its own passive abilities: Keen Senses, Blend In, Lunar Vitality and more. |
+| ![Wall-running](docs/screenshots/wallrun.png) <br> **Wall-run** along buildings, then kick off to keep your flow. | ![Climbing a tower](docs/screenshots/climb.png) <br> **Climb anything.** Run into a wall to scale it and mantle onto the roof. |
 | ![Sprinting on all fours](docs/screenshots/sprint.png) <br> **Drop to all fours** and build up to 30 m/s down the avenues. | ![Charged leap by day](docs/screenshots/leap-day.png) <br> **Charged leaps** launch you wherever you're looking. |
+| ![Throwing a car](docs/screenshots/car-throw.png) <br> **Grab and throw** anything: trash cans, benches, people, cars. | ![Vampires and a combo](docs/screenshots/vampires.png) <br> **Combos, style ranks and damage numbers.** Chain hits up to SAVAGE. |
+| ![Police standoff](docs/screenshots/police.png) <br> **Police** roll up in cruisers when your heat rises. | ![Demon brute](docs/screenshots/demon.png) <br> **Hellgates** open in the industrial yards and spit out demon brutes. |
+| ![Witches](docs/screenshots/witches.png) <br> **Witches** float, hurl homing hexes and blink away. | ![Ghouls](docs/screenshots/ghouls.png) <br> **Ghouls** crawl out of Hollow Hill Cemetery after dark. |
+| ![Keen Senses](docs/screenshots/senses.png) <br> **Keen Senses**: heartbeats through walls and a scent trail to your goal. | ![Storm](docs/screenshots/storm.png) <br> **Dynamic weather**: fog, rain, and thunderstorms with lightning. |
 | ![Mid-transformation](docs/screenshots/transform.png) <br> **Transform at will.** Bones crack, a roar, a shockwave. | ![Full moon over the lake](docs/screenshots/full-moon-lake.png) <br> **The full moon** forces the change every third night. |
-| ![Vampires attack](docs/screenshots/vampires.png) <br> **Vampires** prey on civilians at night. Save them, or don't. | ![Hunters open fire](docs/screenshots/hunters.png) <br> **Silver Dawn hunters** answer your heat with silver rifles. |
-| ![The Moon Shrine](docs/screenshots/ruins.png) <br> **The Ancient Ruins**, where you learn the Old Magic. | ![The Blackfang Alpha](docs/screenshots/alpha.png) <br> **The Blackfang Alpha** and its pack wait in the peaks. |
-| ![Map of Greyhaven](docs/screenshots/map.png) <br> **Greyhaven**: about 1.4 km square, with territory control in every district. | ![Skill tree](docs/screenshots/skills.png) <br> **Bloodline skills**: speed, armour, double jump, howl and more. |
+| ![Dusk over the rooftops](docs/screenshots/rooftop-dusk.png) <br> **A bigger city**: glass towers, brick walk-ups, a gothic old town, neon and billboards. | ![The Moon Shrine](docs/screenshots/ruins.png) <br> **The Ancient Ruins**, where you learn the Old Magic. |
+| ![The Blackfang Alpha](docs/screenshots/alpha.png) <br> **The Blackfang Alpha** and its pack wait in the peaks. | ![Map of Greyhaven](docs/screenshots/map.png) <br> **Explore to uncover the map**, and survey it from red-beacon spires. |
 
 <p align="center"><img src="docs/screenshots/title.png" width="70%" alt="Title screen" /></p>
 
@@ -67,95 +71,117 @@ npm run screenshots  # regenerate the README screenshots in docs/screenshots
 | --- | --- |
 | WASD / left stick | Move |
 | Mouse / right stick | Look |
-| **F** | Transform (human ⇄ beast) |
-| **Shift** | Sprint. As the beast you drop to all fours and pick up speed. |
-| **Space** | Jump. As the beast, **hold and release** for a charged leap in the direction you're looking. |
-| Run into a wall | **Climb** (beast). Space while on a wall = wall-jump. You climb over the top edge automatically. |
-| LMB | Claw combo (3rd hit is a finisher). In the air: **pounce** on the nearest target. |
-| RMB | Heavy smash. High in the air: **ground slam** (shockwave scales with fall height). |
-| C / Alt | Dash (brief invulnerability) |
-| Q | Howl: civilians flee (or cheer, if you're their guardian), hunters are stunned, +25% damage |
-| R | Moonfire: a ranged blast of lunar flame. You learn it at the Ancient Ruins. |
-| E | Interact / feed on the fallen (heals; feeding on innocents costs morality) |
-| Y / N | Accept / decline a contract offer |
-| Tab | Skill tree · **M** Map · **Esc** Pause · **F11** Fullscreen |
+| **F** · **1 / 2 / 3** | Transform (human ⇄ last monster form) · pick **human / hybrid / beast** directly |
+| **Shift** | Sprint. The beast drops to all fours and builds speed. |
+| **Space** | Jump. Beast: **hold and release** for a charged leap where you're looking. |
+| Run into a wall | **Mantle** low ledges, **climb** tall walls (hybrid, beast). Space on a wall = wall-jump. |
+| Shift + jump alongside a wall | **Wall-run**. Jump again to kick off. |
+| **C** / Ctrl / Alt | Dash (brief invulnerability). While sprinting: **slide**. |
+| LMB | Combo attack (3rd hit is a finisher). In the air: **pounce**. |
+| RMB | Heavy: beast smash, hybrid uppercut. High in the air: **ground slam**. |
+| **X** (hold) | Block. Time it just before a hit to **PARRY** (stuns the attacker, slows time). |
+| **T** / middle mouse | Lock on |
+| **G** | Grab. **G** or LMB again to throw. |
+| **E** | **Finisher** on a weakened or stunned enemy · feed on the fallen · interact |
+| **Z** | **Blood Moon Frenzy** (needs full rage) |
+| Q | Howl: fear, stuns, +25% damage |
+| R | Moonfire: ranged lunar blast, learned at the Ancient Ruins |
+| **V** | Keen Senses |
+| Y / N | Accept / decline a contract |
+| Tab · M · **P** | Skills · map · **photo mode** · Esc pause · F11 fullscreen |
 
-Gamepads with the standard (Xbox) layout are supported.
+Gamepads with the standard (Xbox) layout are supported: A jump · B dash · X attack · Y heavy · LB block · RB howl · LT sprint · RT Moonfire · LS senses · RS lock-on · D-pad transform / interact / grab / frenzy.
 
-## What's in this build
+## What's new in 0.2
 
-**Transformation.** You can transform at any time. It's a 1.3 s sequence: the human body swells, the beast bursts out, a roar plays, and the emergence sends out a shockwave. Each form plays differently:
+1. **Hybrid form.** A third form, half human and half wolf, with its own model and transformation.
+   - Faster than a human, more agile than the beast.
+   - Wall-runs, climbs and uppercuts.
+   - Civilians only raise half the heat when they see it.
+2. **Free form switching.** 1 / 2 / 3 pick any form, and every pair has its own morph.
+3. **Human passives.** Keen Senses, Blend In (heat fades 3x faster, hunters and police ignore you), Lunar Vitality (fast night regeneration), Feral Reflexes (a last-moment dash slows time) and Freerunner (vault and mantle).
+4. **Block and perfect parry.** Parries stun attackers and slow time. Ranks of *Riposte* can bat bullets and hexes back.
+5. **Lock-on targeting**, with camera framing.
+6. **Grab and throw.** People, trash cans, benches, dumpsters, and cars when you're the beast.
+7. **Brutal finishers**, cinematic executions in slow motion that heal you.
+8. **Combo counter and style ranks** (C → SAVAGE) that boost XP, plus floating damage numbers.
+9. **Blood Moon Frenzy.** A full-rage super mode: more damage, speed and lifesteal, and you take less damage.
+10. **Four new enemies:**
+    - **Police**: pistols, arrive in squad cruisers.
+    - **Witches**: hover, homing hexes, blink.
+    - **Ghouls**: swarming pack hunters.
+    - **Demon brutes**: charge, fire stomp. Charge them into a wall to stun them.
+11. **Wall-running and flow.** Chained wall-jumps, slide-jumps and leaps stack speed bonuses.
+12. **Mantling and sliding.** Pull yourself over ledges, and slide under danger or into enemies.
+13. **A bigger city.**
+    - A 12×12-block downtown, twice the area of before.
+    - Glass towers, brick walk-ups with fire escapes, and a gothic old town.
+    - Alleys, neon shopfronts, rooftop billboards, water towers and cranes.
+14. **Traffic.** Cars drive the grid, stop for pedestrians and honk. Hit them and they tumble, smoke and set off alarms.
+15. **Destructible street furniture.** Hydrants burst into geysers, red barrels explode, and benches, bins, mailboxes and newsboxes go flying.
+16. **Vantage spires.** Climb eight red-beacon spires and survey the city to reveal the map.
+17. **Moonstones.** 40 collectibles; every four gives a skill point and +5% max health.
+18. **Wildlife.** Deer and rabbits to hunt and feed on without any morality cost.
+19. **Dynamic weather.** Fog, rain and thunderstorms with lightning and thunder. The streets turn wet and reflective.
+20. **Safehouse.** Rest until dusk or dawn, heal, clear your heat and save. You respawn here.
+21. **New events:**
+    - **Ghoul Swarms** and **Coven Rituals**.
+    - **Hellgates** that bring a demon brute.
+    - **Hollow Hill Cemetery**, a new landmark.
+22. **Better models.**
+    - Rounded, jointed humans with faces, hairstyles, outfits, coats, hats, glasses and beards.
+    - A detailed werewolf with a mane, teeth, ears and claws.
+    - Distinct looks for every enemy type.
+23. **Bloom and ground decals.** Glowing eyes, neon and magic, plus blood pools, paw prints and slam craters.
+24. **Photo mode.** A free camera with time-of-day control.
 
-- **Human:** 100 HP, fragile (takes fall damage), slow, but invisible to the hunters while your heat is low.
-- **Beast:** 260 HP, fast regeneration, 30 m/s four-legged sprint, charged leaps, climbing, slams and claws. Civilians who see you raise your heat.
+## What's in the game
 
-Every third night is a **full moon**. When it rises you're forced into beast form and can't change back until dawn, unless you learn *Moon's Leash*. You also get +30% damage, rage keeps building, and the sky turns brighter.
+**Forms.**
 
-**Traversal (the core of the game).**
+| | Human | Hybrid | Beast |
+| --- | --- | --- | --- |
+| Health | 100 | 180 | 260 |
+| Top speed | 9 m/s | 18 m/s | 30 m/s |
+| Traversal | vault, mantle, short wall-runs | climb, long wall-runs, uppercut launches | four-legged sprint, charged leaps, climb, ground slams, trample |
+| Heat when seen | none (blends in) | half | full |
 
-- Sprint speed builds with momentum, and sharp turns at speed cost some of it.
-- The camera widens its FOV and pulls back as you speed up. Speed lines and rushing wind add to the feel.
-- Charged leaps launch you along your camera's aim.
-- You can climb any building, scuttle sideways along a wall, wall-jump, and mantle over the top. Rooftops have obstacles to vault.
-- Big drops end in a ground-slam shockwave.
+Every third night is a **full moon**. It forces you out of human form until dawn, unless you learn *Moon's Leash*. You also get +30% damage and steady rage.
 
-**The world.** Greyhaven is about 1.4 km square, with no loading screens:
+**Greyhaven.** Roughly 1.7 km square:
 
-- Downtown grid with towers up to 120 m.
-- Suburbs, an industrial yard with stacked containers, and a lakeside with docks and cabins.
-- Northwood forest (~4,000 trees) and the Ashen Peaks.
-- Landmarks:
-  - **Ancient Ruins** with the Moon Shrine
-  - **Hunters' Lodge**
-  - **St. Corvin Cathedral** (vampire nest)
-  - **Blackfang Den**
+- A dense downtown with an old-town quarter.
+- Suburbs, Hollow Hill Cemetery, an industrial district with cranes and container stacks.
+- A lake with docks and cabins, Northwood forest and the Ashen Peaks.
+- Landmarks: Ancient Ruins, Hunters' Lodge, St. Corvin Cathedral, Blackfang Den.
 
-There's a full day/night cycle (12 real minutes per day) with a 3-night moon cycle.
+There's a 12-minute day/night cycle with a 3-night moon cycle.
 
-**Who lives there:**
+**Hero or monster:**
 
-- **Civilians** go about their day, panic at the beast, and report sightings, which raises your heat.
-- **Hunters** of the Order of the Silver Dawn use silver rifles. Their aim gets worse the faster you move.
-- **Vampires** feed on civilians at night, blink-lunge, and turn to ash when killed.
-- The **Blackfang** pack's rival werewolves and their **Alpha** boss.
+- **Morality** from −100 to +100, plus **heat** (0–5) that brings police first and Silver Dawn hunters after.
+- **Faction standing** and **territory control** in every district.
+- **Contracts** from the Vampire Court, the Mayor and the Order.
+- **Dynamic events** and a story thread that ends at the Blackfang Alpha, with three endings and packmates who follow you afterwards.
 
-**Morality and consequences:**
+**Progression.** XP, levels and nine skills: Swift Paws, Iron Hide, Bloodlust, Moon Leap, Terrible Howl, Silver Tolerance, Moon's Leash, Riposte and Blood Moon. Moonstones add more. The game autosaves every 30 s.
 
-- **Morality** runs from −100 (*The Beast of Greyhaven*) to +100 (*Guardian of Greyhaven*).
-- **Heat** (0–5) controls how many hunters come after you.
-- You have standing with four factions, and **territory control** in each of six districts.
-- A guardian gets a truce with the hunters and civilians who cheer instead of scream. A monster gets more heat, more hunters, and Vampire Court contracts.
-
-**Missions:**
-
-- **Story thread:** transform → run → climb → leap → howl → learn the Old Magic at the shrine → choose your path → defeat the Blackfang Alpha. Then you get an **ending** based on your morality: Guardian, Beast or Lone Alpha. Beating the Alpha also gives you two **packmates** who follow you and fight with you.
-- **Dynamic events:**
-  - Vampire attacks: save the victims, or let them die.
-  - Hunter patrols.
-  - Rival pack incursions.
-- **Contracts:**
-  - The Vampire Court's *Blood Tithe* (villain).
-  - The Mayor's *Break the Lodge* (hero).
-  - The Order's *Uneasy Truce* (purge the cathedral).
-
-**Progression.** You earn XP, levels and skill points. There are 7 skills: Swift Paws, Iron Hide, Bloodlust, Moon Leap (double jump), Terrible Howl, Silver Tolerance and Moon's Leash.
-
-**Saving.** The game autosaves every 30 s and when you quit. *Continue* is on the title screen.
-
-All visuals are procedural, made from primitives and generated textures, and all audio is synthesized at runtime: howls, roars, gunshots, wind and a heartbeat. There are no asset files to license.
+All visuals are procedural and all audio is synthesized at runtime: howls, roars, sirens, thunder, rain, car alarms. There are no asset files to license.
 
 ## Project layout
 
 ```
 src/            game source (bundled by esbuild → app/game.js)
-  main.js       renderer, loop, menus, save/load
-  world.js      Greyhaven: terrain, districts, colliders, sky, day/moon cycle
-  player.js     forms, transformation, traversal, combat, skills
-  characters.js procedural human + werewolf rigs and animation
-  npcs.js       civilians, hunters, vampires, werewolves, AI, projectiles
-  story.js      morality, heat, factions, territory, objectives, events, contracts
-  camera.js     third-person camera (speed FOV, collision, shake)
-  hud.js        HUD, minimap, overlay markers, menus
+  main.js       renderer, bloom, game loop, slow-mo, photo mode, menus, save/load
+  world.js      Greyhaven: terrain, districts, buildings, landmarks, spires, moonstones, sky, moon cycle
+  player.js     three forms, transformation, traversal, combat, skills, passives
+  characters.js procedural humans, hybrid, werewolves and wildlife, with animation
+  npcs.js       civilians, police, hunters, vampires, witches, ghouls, demons, wolves, animals: AI and combat
+  props.js      instanced street furniture, traffic and physics (throwing, smashing, explosions)
+  story.js      morality, heat, factions, territory, objectives, events, contracts, spires, safehouse
+  weather.js    fog, rain, thunderstorms and lightning
+  camera.js     third-person camera (speed FOV, lock-on, finishers, wall-run tilt, photo mode)
+  hud.js        HUD, minimap with fog of war, senses overlay, combo meter, damage numbers, menus
   fx.js audio.js input.js util.js geo.js
 app/            index.html, style.css (+ bundled game.js)
 electron/       desktop shell (main + preload)
@@ -166,13 +192,10 @@ docs/           screenshots
 
 ## Roadmap
 
-The next steps from the game bible:
-
-- Skinned and animated character models.
-- Demons, witches and spirits.
-- Witch magic trees.
-- Interiors.
-- Police vehicles and chases.
+- Skinned, motion-captured character animation.
+- Interiors to break into.
+- Car chases.
 - Voiced story missions.
 - Territory perks.
-- Multiple werewolf forms (e.g. a lighter "lupine" scout form vs. the hulking "crinos").
+- A lighter "lupine" scout form.
+- Multiplayer packs.

@@ -11,15 +11,20 @@
   <canvas id="overlay"></canvas>
   <div id="vignette"></div>
   <div id="hurt"></div>
+  <div id="frenzy"></div>
+  <div id="sleep-fade" class="hidden"></div>
+  <div id="photo-hint" class="hidden">PHOTO MODE · WASD + mouse to fly · Shift faster · Space up · [ / ] time of day · P to exit</div>
 
   <div id="hud" class="hidden">
     <div id="vitals">
       <div id="form-label">HUMAN</div>
+      <div id="forms"></div>
       <div class="bar"><div id="hp-fill" class="fill hp"></div><span id="hp-text"></span></div>
       <div class="bar small"><div id="rage-fill" class="fill rage"></div><span>RAGE</span></div>
       <div class="bar tiny"><div id="xp-fill" class="fill xp"></div></div>
       <div id="level">LV 1</div>
       <div id="abilities"></div>
+      <div id="passives"></div>
     </div>
     <div id="world-info">
       <div id="clock">20:30</div>
@@ -36,6 +41,8 @@
     <div id="contract"></div>
     <div id="crosshair"><svg viewBox="0 0 60 60"><circle id="charge-ring" cx="30" cy="30" r="22" /></svg></div>
     <div id="prompt"></div>
+    <div id="combo" class="hidden"></div>
+    <div id="flow"></div>
     <div id="toasts"></div>
     <canvas id="minimap" width="200" height="200"></canvas>
     <div id="offer" class="hidden"></div>
@@ -69,6 +76,7 @@
           <label>Field of view <input id="set-fov" type="range" min="55" max="95" step="1" value="70" /></label>
           <label><input id="set-invert" type="checkbox" /> Invert Y</label>
           <label><input id="set-shadows" type="checkbox" checked /> Shadows</label>
+          <label><input id="set-bloom" type="checkbox" checked /> Bloom (glow)</label>
           <h3>Legend</h3>
           <div id="stats"></div>
         </div>

@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { rand } from './util.js';
 
-const MAX = 1500;
+const MAX = 3000;
 
 export class FX {
   constructor(scene) {
@@ -149,5 +149,115 @@ export class FX {
       }
     }
     return n;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Ground decals: blood pools, beast footprints and slam craters.
+function splatTexture(kind) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  g.translate(64, 64);
+  if (kind === 'blood') {
+    for (let i = 0; i < 14; i++) {
+      const a = Math.random() * Math.PI * 2, d = Math.random() * 36;
+      const r = 6 + Math.random() * 22;
+      const grd = g.createRadialGradient(Math.cos(a) * d, Math.sin(a) * d, 0, Math.cos(a) * d, Math.sin(a) * d, r);
+      grd.addColorStop(0, 'rgba(255,255,255,0.95)');
+      grd.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = grd;
+      g.beginPath();
+      g.arc(Math.cos(a) * d, Math.sin(a) * d, r, 0, Math.PI * 2);
+      g.fill();
+    }
+  } else if (kind === 'paw') {
+    g.fillStyle = 'rgba(255,255,255,0.9)';
+    g.beginPath();
+    g.ellipse(0, 14, 22, 18, 0, 0, Math.PI * 2);
+    g.fill();
+    for (const [x, y] of [[-24, -14], [-8, -28], [8, -28], [24, -14]]) {
+      g.beginPath();
+      g.ellipse(x, y, 8, 11, 0, 0, Math.PI * 2);
+      g.fill();
+    }
+  } else {
+    const grd = g.createRadialGradient(0, 0, 10, 0, 0, 62);
+    grd.addColorStop(0, 'rgba(255,255,255,0.95)');
+    grd.addColorStop(0.6, 'rgba(255,255,255,0.6)');
+    grd.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grd;
+    g.beginPath();
+    g.arc(0, 0, 62, 0, Math.PI * 2);
+    g.fill();
+    g.strokeStyle = 'rgba(255,255,255,0.9)';
+    g.lineWidth = 2;
+    for (let i = 0; i < 9; i++) {
+      const a = Math.random() * Math.PI * 2;
+      g.beginPath();
+      g.moveTo(Math.cos(a) * 14, Math.sin(a) * 14);
+      g.lineTo(Math.cos(a + 0.2) * 40, Math.sin(a + 0.2) * 40);
+      g.lineTo(Math.cos(a - 0.1) * 60, Math.sin(a - 0.1) * 60);
+      g.stroke();
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+export class Decals {
+  constructor(scene, world) {
+    this.scene = scene;
+    this.world = world;
+    this.pool = [];
+    this.cursor = 0;
+    this.tex = { blood: splatTexture('blood'), paw: splatTexture('paw'), crater: splatTexture('crater') };
+    const geo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+    for (let i = 0; i < 160; i++) {
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      m.visible = false;
+      m.renderOrder = 1;
+      scene.add(m);
+      this.pool.push({ m, life: 0, max: 1 });
+    }
+  }
+
+  _put(pos, size, tex, color, life, opacity = 0.85, yaw = Math.random() * 6.28) {
+    const d = this.pool[this.cursor];
+    this.cursor = (this.cursor + 1) % this.pool.length;
+    const y = this.world.groundAt(pos.x, pos.z, pos.y + 0.5, 1);
+    d.m.position.set(pos.x, y + 0.07, pos.z);
+    d.m.scale.set(size, 1, size);
+    d.m.rotation.y = yaw;
+    d.m.material.map = tex;
+    d.m.material.color.set(color);
+    d.m.material.opacity = opacity;
+    d.m.material.needsUpdate = true;
+    d.m.visible = true;
+    d.life = d.max = life;
+    d.opacity = opacity;
+  }
+
+  blood(pos, size = 1, color = '#6a0808') {
+    this._put(pos, size * 1.6, this.tex.blood, color, 60);
+  }
+
+  footprint(pos, beast) {
+    if (!beast) return;
+    this._put(pos, 0.7, this.tex.paw, '#1a1612', 20, 0.6);
+  }
+
+  crater(pos, size) {
+    this._put(pos, size * 2, this.tex.crater, '#1a1814', 90, 0.8);
+  }
+
+  update(dt) {
+    for (const d of this.pool) {
+      if (!d.m.visible) continue;
+      d.life -= dt;
+      if (d.life <= 0) d.m.visible = false;
+      else d.m.material.opacity = d.opacity * Math.min(1, d.life / (d.max * 0.3));
+    }
   }
 }

@@ -49,6 +49,7 @@ await page.evaluate(() => {
       }
       if (look) { inp.locked = true; inp.mouseDX = look[0]; inp.mouseDY = look[1]; }
       g.step(1 / 60);
+      window.__maxSpeed = Math.max(window.__maxSpeed || 0, g.player.speed);
       for (const k of press) inp.keys.delete(k);
     }
     for (const k of hold) inp.keys.delete(k);
@@ -89,9 +90,18 @@ let s = await state();
 check('transformed into beast', s.form === 'wolf', s);
 await shot('04-beast.png');
 
+await page.evaluate(() => {
+  // an open avenue: x = -45 runs north-south through downtown
+  const p = window.__lycan.player;
+  p.pos.set(-45 - 3.5, 0, 200);
+  p.vel.set(0, 0, 0);
+  window.__lycan.camera.yaw = Math.PI;
+});
+await page.evaluate(() => (window.__maxSpeed = 0));
 await sim(150, { hold: ['KeyW', 'ShiftLeft'] });
 s = await state();
-check('beast sprint on all fours reaches high speed', s.speed > 22, s);
+s.maxSpeed = +(await page.evaluate(() => window.__maxSpeed)).toFixed(1);
+check('beast sprint on all fours reaches high speed', s.maxSpeed > 25, s);
 await shot('05-sprint.png');
 
 await sim(50, { hold: ['Space'] });
@@ -122,6 +132,7 @@ const target = await page.evaluate(() => {
   p.yaw = Math.PI;
   g.camera.yaw = Math.PI;
   g.camera.pitch = 0.2;
+  window.__climbBox = best;
   return { top: best.maxY };
 });
 await sim(60, { hold: ['KeyW'] });
@@ -144,27 +155,149 @@ await sim(30, { hold: ['Space'] });
 await page.evaluate(() => window.__release('Space'));
 await sim(25);
 await sim(5, { mouse: [2] });
-await page.evaluate(() => window.__lycan.input.mousePressed.add(2));
 await sim(180);
 s = await state();
 check('survives rooftop leap and lands', s.onGround && s.hp > 0, s);
 
-// combat sanity: spawn a vampire and claw it to death
-const killed = await page.evaluate(() => {
+// ---- combat, forms, interaction, world systems ---------------------------
+const r = await page.evaluate(() => {
   const g = window.__lycan;
   const p = g.player;
-  p.pos.set(0, 0, 25);
+  const inp = g.input;
+  const step = (n, keys = [], press = []) => {
+    for (let i = 0; i < n; i++) {
+      for (const k of keys) inp.keys.add(k);
+      if (i === 0) for (const k of press) { inp.pressed.add(k); inp.keys.add(k); }
+      g.step(1 / 60);
+      for (const k of press) inp.keys.delete(k);
+    }
+    for (const k of keys) inp.keys.delete(k);
+  };
+  const out = {};
+  const clear = () => { for (const o of [...g.npcs.list]) g.npcs.remove(o); };
+  g.npcs._populate = () => {};
+  clear();
+  p.pos.set(0, 0, 30);
   p.vel.set(0, 0, 0);
-  g.step(1 / 60);
+
+  // claws kill a vampire
   const v = g.npcs.spawn('vampire', p.pos.clone().add(p.forward.multiplyScalar(2.5)), { state: 'attack' });
-  v.stun = 999; // test the damage pipeline, not the vampire's footwork
-  for (let i = 0; i < 12 && !v.dead; i++) {
-    g.input.mousePressed.add(0);
-    for (let k = 0; k < 20; k++) g.step(1 / 60);
+  v.stun = 999;
+  for (let i = 0; i < 12 && !v.dead; i++) { inp.mousePressed.add(0); step(20); }
+  out.vampireDead = v.dead;
+
+  // hybrid form
+  p.transformCooldown = 0;
+  step(80, [], ['Digit2']);
+  out.hybrid = p.form;
+
+  // wall-run along a building's south face
+  const b = window.__climbBox;
+  p.pos.set(b.minX + 1, 0, b.maxZ + p.radius + 0.2);
+  p.vel.set(0, 0, 0);
+  g.camera.yaw = Math.PI / 2 + 0.3;
+  step(25, ['KeyW', 'ShiftLeft']);
+  out.wallRun = false;
+  for (let i = 0; i < 50; i++) {
+    step(1, ['KeyW', 'ShiftLeft'], i === 0 ? ['Space'] : []);
+    if (p.wallRunning) out.wallRun = true;
   }
-  return v.dead || { hp: v.hp, vp: v.pos.toArray(), pp: p.pos.toArray() };
+  step(60);
+
+  // grab and throw a trash can
+  const can = g.props.items.find((it) => it.type === 'trash' && !it.gone && Math.abs(it.pos.x) < 200);
+  p.pos.set(can.pos.x + 1.6, 0, can.pos.z);
+  p.vel.set(0, 0, 0);
+  p.yaw = -Math.PI / 2;
+  step(2, [], ['KeyG']);
+  out.grabbed = !!p.held;
+  step(10);
+  step(2, [], ['KeyG']);
+  step(5);
+  out.thrown = !p.held && can.dynamic;
+
+  // block + parry a vampire's claws
+  clear();
+  p.pos.set(0, 0, 30);
+  step(2);
+  const v2 = g.npcs.spawn('vampire', p.pos.clone().add({ x: 0, y: 0, z: -2 }), { state: 'attack' });
+  step(2, ['KeyX']);
+  inp.keys.add('KeyX');
+  out.parry = g.npcs._strike(v2, 14);
+  out.parryStun = v2.stun > 0;
+  inp.keys.delete('KeyX');
+  step(30);
+
+  // finisher on a weakened hunter
+  clear();
+  const h = g.npcs.spawn('hunter', p.pos.clone().add({ x: 0, y: 0, z: -2 }), { state: 'pursue' });
+  h.hp = 10;
+  h.stun = 5;
+  step(1, [], ['KeyE']);
+  out.finisherStarted = p.finisherT > 0;
+  step(90);
+  out.finisherKill = h.dead;
+
+  // frenzy + senses
+  p.rage = 100;
+  step(2, [], ['KeyZ']);
+  out.frenzy = p.frenzyT > 0;
+  step(2, [], ['KeyV']);
+  out.senses = p.senses;
+  step(2, [], ['KeyV']);
+
+  // a beast's heavy blow sends a parked car flying
+  p.startTransform('wolf', true);
+  step(100);
+  const car = g.props.items.find((it) => it.kind === 'car' && !it.driving && !it.police && !it.gone && Math.abs(it.pos.x) < 200);
+  p.pos.set(car.pos.x + 3.2, 0, car.pos.z);
+  p.vel.set(0, 0, 0);
+  g.camera.yaw = -Math.PI / 2;
+  g.camera.pitch = -0.1;
+  const before = car.pos.clone();
+  inp.mousePressed.add(2);
+  step(40);
+  out.carSmashed = car.dynamic || car.pos.distanceTo(before) > 0.5;
+
+  // police respond to a raised heat level
+  out.policeCar = !!g.props.spawnPoliceCar(p.pos);
+
+  // weather turns
+  g.weather.set('storm');
+  step(400);
+  out.stormLight = +g.world.lightMul.toFixed(2);
+
+  // collect a moonstone and survey from a spire
+  const st = g.world.moonstones[0];
+  p.pos.set(st.pos.x, st.pos.y - 1.2, st.pos.z);
+  step(2);
+  out.moonstones = p.moonstones;
+  const vp = g.world.vantages[0];
+  p.pos.set(vp.pos.x + 1, vp.pos.y + 0.1, vp.pos.z);
+  p.vel.set(0, 0, 0);
+  step(2);
+  step(2, [], ['KeyE']);
+  out.vantage = vp.done;
+  out.props = g.props.items.length;
+  out.traffic = g.props.traffic.length;
+  g.weather.set('clear');
+  return out;
 });
-check('claws kill a vampire', killed === true, killed);
+console.log(JSON.stringify(r));
+check('claws kill a vampire', r.vampireDead === true, r.vampireDead);
+check('hybrid transformation', r.hybrid === 'hybrid', r.hybrid);
+check('hybrid wall-runs', r.wallRun, r.wallRun);
+check('grab and throw a prop', r.grabbed && r.thrown, { grabbed: r.grabbed, thrown: r.thrown });
+check('perfect block parries and stuns', r.parry === 'parry' && r.parryStun, r.parry);
+check('finisher executes a weakened enemy', r.finisherStarted && r.finisherKill, { started: r.finisherStarted, kill: r.finisherKill });
+check('blood moon frenzy', r.frenzy, r.frenzy);
+check('keen senses toggle', r.senses, r.senses);
+check('heavy blow launches a parked car', r.carSmashed, r.carSmashed);
+check('police cruiser spawns', r.policeCar, r.policeCar);
+check('storm darkens the sky', r.stormLight < 0.8, r.stormLight);
+check('moonstone collected', r.moonstones >= 1, r.moonstones);
+check('spire surveyed', r.vantage, r.vantage);
+check('city is full of props and traffic', r.props > 500 && r.traffic > 10, { props: r.props, traffic: r.traffic });
 
 // map, skills, daytime forest
 await page.evaluate(() => window.__lycan.openMenu('map'));
@@ -175,7 +308,7 @@ await page.evaluate(() => {
   const g = window.__lycan;
   g.setPaused(false);
   g.world.time = 13;
-  g.player.pos.set(-200, 30, -330);
+  g.player.pos.set(-250, 30, -430);
   g.camera.pitch = -0.1;
 });
 await sim(60);
@@ -184,7 +317,7 @@ await page.evaluate(() => {
   const g = window.__lycan;
   g.world.time = 23;
   g.world.day = 2; // full moon night
-  g.player.pos.set(330, 2, 80);
+  g.player.pos.set(430, 2, 60);
   g.camera.yaw = Math.PI * 0.9;
 });
 await sim(120, { hold: ['KeyW'] });
