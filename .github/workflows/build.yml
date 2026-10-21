@@ -24,9 +24,11 @@ jobs:
           - name: Windows
             os: windows-latest
             target: --win nsis zip
+          # macOS .zip packages build fine from Linux, so every push gets
+          # them without waiting on a (scarce) macOS runner
           - name: macOS
-            os: macos-latest
-            target: --mac dmg zip --x64 --arm64
+            os: ubuntu-latest
+            target: --mac zip --x64 --arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -67,3 +69,42 @@ jobs:
             dist/*.exe
             dist/*.zip
             dist/*.dmg
+
+  # Native macOS .dmg. Runs only on release tags or when started by hand,
+  # because macOS runners may not be available to this repository; if none
+  # picks the job up it is cancelled without failing the release build.
+  macos-dmg:
+    name: macOS (dmg)
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Bundle game
+        run: npm run build:web
+
+      - name: Package desktop app
+        run: npx electron-builder --mac dmg --x64 --arm64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LYCAN-macOS-dmg
+          path: dist/*.dmg
+          if-no-files-found: error
+
+      - name: Attach to GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.dmg

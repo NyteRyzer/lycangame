@@ -39,11 +39,13 @@ Builds are produced for **Linux, Windows and macOS**.
 
 Packages land in `dist/`.
 
-**CI builds:** `.github/workflows/build.yml` builds on native Ubuntu, Windows and macOS runners on every push. Download the packages from the run's **Artifacts** section. Pushing a tag like `v0.1.0` also attaches them to a GitHub Release.
+**CI builds:** `.github/workflows/build.yml` runs on every push and uploads three artifacts: **LYCAN-Linux** (AppImage + tar.gz), **LYCAN-Windows** (installer + portable zip) and **LYCAN-macOS** (Intel + Apple Silicon zips, packaged on Linux). Download them from the run's **Artifacts** section.
+
+Pushing a tag like `v0.1.0` attaches everything to a GitHub Release. Tag builds (or a manual *Run workflow*) also try to build a native macOS `.dmg`. That job needs a GitHub macOS runner; if none is available it is cancelled without failing the build.
 
 Build notes:
 
-- From Linux, `npm run dist:all` builds the Linux packages, the Windows portable `.zip` and the macOS `.zip`. The Windows installer (`.exe`) needs Windows or wine, and the macOS `.dmg` needs a Mac. CI builds both on native runners.
+- From Linux, `npm run dist:all` builds the Linux packages, the Windows portable `.zip` and the macOS `.zip`. The Windows installer (`.exe`) needs Windows or wine, and the macOS `.dmg` needs a Mac. CI builds the installer on every push, and the `.dmg` on release tags.
 - Builds are **unsigned**:
   - **macOS:** right-click the app and choose *Open* the first time, or run `xattr -cr LYCAN.app`.
   - **Windows:** SmartScreen may ask you to click *More info → Run anyway*.
