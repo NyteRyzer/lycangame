@@ -30,6 +30,7 @@ To re-cut the sprites after changing the sheet, run `python3 tools/cut_sprites.p
 | Punch / Kick | `F` / `G` | `K` / `L` |
 | Special | `R` | `I` |
 | Super (full meter) | `T` | `O` |
+| Taunt (fills meter, leaves you open) | `S` | `↓` |
 
 In single player, P1 can also use the P2 keys. `P` pauses, `Esc` backs out, `M` mutes. On a phone, on-screen buttons appear for player 1 and menus respond to taps.
 
@@ -39,3 +40,5 @@ In single player, P1 can also use the P2 keys. `P` pauses, `Esc` backs out, `M` 
 - Best-of-3 rounds with a 99-second timer, combos, knockdowns, chip damage, projectile clashes and hit-stop.
 - Super cut-ins, speech bubbles full of catchphrases, and character-specific win and lose lines.
 - Mirror matches give player 2 an alternate outfit.
+- Three stages: Sunnyvale Trailer Park (with Cory & Trevor and Steve French cameos), the Community Day wrestling ring from "The Green Bastard", and the C Block jail yard.
+- Lines, taunts and gags come from research on the show and movies. See `docs/research.md` for what was used and the sources.

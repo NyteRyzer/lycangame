@@ -116,8 +116,8 @@ kbd {
 
   <div class="touch" id="touch" aria-label="Touch controls for player 1">
     <div class="pad">
-      <span></span><button data-k="KeyW" aria-label="Jump">▲</button><span></span>
-      <button data-k="KeyA" aria-label="Left">◀</button><button data-k="KeyP" aria-label="Pause">II</button><button data-k="KeyD" aria-label="Right">▶</button>
+      <button data-k="KeyP" aria-label="Pause">II</button><button data-k="KeyW" aria-label="Jump">▲</button><span></span>
+      <button data-k="KeyA" aria-label="Left">◀</button><button data-k="KeyS" aria-label="Taunt">▼</button><button data-k="KeyD" aria-label="Right">▶</button>
     </div>
     <div class="acts">
       <button data-k="KeyF">PUNCH</button><button data-k="KeyG">KICK</button>
@@ -134,6 +134,7 @@ kbd {
         <dt><kbd>F</kbd><kbd>G</kbd></dt><dd>Punch, kick (works in the air too)</dd>
         <dt><kbd>R</kbd></dt><dd>Special move</dd>
         <dt><kbd>T</kbd></dt><dd>Super, when the meter is full</dd>
+        <dt><kbd>S</kbd></dt><dd>Taunt. Fills some meter, leaves you open.</dd>
       </dl>
       <p class="tip">Playing solo? Arrow keys and <kbd>K</kbd><kbd>L</kbd><kbd>I</kbd><kbd>O</kbd> also work for player 1.</p>
     </div>
@@ -145,6 +146,7 @@ kbd {
         <dt><kbd>K</kbd><kbd>L</kbd></dt><dd>Punch, kick</dd>
         <dt><kbd>I</kbd></dt><dd>Special move</dd>
         <dt><kbd>O</kbd></dt><dd>Super</dd>
+        <dt><kbd>↓</kbd></dt><dd>Taunt</dd>
       </dl>
       <p class="tip"><kbd>P</kbd> pauses. <kbd>Esc</kbd> backs out. <kbd>M</kbd> mutes.</p>
     </div>
@@ -192,9 +194,10 @@ const ROSTER = [
     special: { name: 'HASH BRICK', type: 'throw', proj: 'brick' }, super: { name: 'THE SHITMOBILE', fn: 'car' },
     lines: {
       intro: ["Smokes, let's go.", 'Gonna get two birds stoned at once.', "It's not rocket appliances, boys."],
+      taunt: ['Worst case Ontario.', "It's all denial and error, bud.", 'This is a Catch-23 situation.', "I'm not a pessimist, I'm an optometrist.", 'What comes around is all around.', 'Survival of the fitness, boys.'],
       special: ['Hash brick!', 'Catch, ya frig!'], super: ["SHITMOBILE, LET'S GO!"],
       hit: ['Frig!', 'Ow, my frigging face!', 'Not cool, bud!'],
-      win: ['Worst case Ontario, you got your ass kicked.', "That's what you get for messin' with a Grade 10 graduate. Almost.", "I'm the king of this park. Dictator, even."],
+      win: ['Worst case Ontario, you got your ass kicked.', "That's what you get for messin' with a Grade 10 graduate. Almost.", 'What comes around is all around.'],
       lose: ["I'm way too stoned for this.", 'Frig off... I mean, good fight.'] } },
   { id: 'julian', name: 'JULIAN', meter: 'RUM & COKE',
     tag: 'The brains of the operation. Never, ever spills his drink.',
@@ -204,18 +207,20 @@ const ROSTER = [
     special: { name: 'CLOTHESLINE', type: 'dash', move: 'clothesline' }, super: { name: "JULIAN'S GYM", fn: 'rush' },
     lines: {
       intro: ['Boys, I got a plan.', "Relax. The drink isn't going anywhere.", 'Make this quick. I got a scheme cooking.'],
+      taunt: ['Rolled a car once. Kept the drink.', "One hand's all I need.", 'This glass has seen more action than you.', 'Boys, boys. Relax.'],
       special: ['Clothesline!', 'Outta my way!'], super: ["JULIAN'S GYM IS OPEN!"],
       hit: ['Watch the drink!', 'Easy on the glass!', "Ow. Drink's fine."],
       win: ['Not one drop spilled.', "That's how you run a park.", 'Boys... that was the plan all along.'],
       lose: ["...still didn't spill it.", "This wasn't part of the plan."] } },
   { id: 'bubbles', name: 'BUBBLES', meter: 'KITTIES',
-    tag: 'Shed dweller. Cart wrangler. Sworn protector of all kitties.',
+    tag: 'Shopping cart repairman. Lives in a shed with his kitties. Wrestles as the Green Bastard.',
     hp: 95, spd: 4.6, pow: 0.95, jump: 16.5, decency: 10,
     look: { skin: '#e8b08c', hair: '#2a221c', hairStyle: 'bowl', beard: 'none', shirt: '#3d6b4f', sleeve: 'long', pants: '#4a3b2c', shoes: '#1a1a1a', belly: 6, build: 40, glasses: true, plaid: true },
     alt: { shirt: '#7a3f6e' },
     special: { name: 'KITTY LAUNCHER', type: 'throw', proj: 'cat' }, super: { name: 'SHOPPING CART BLITZ', fn: 'cart' },
     lines: {
       intro: ['Decent!', 'Kitties, assemble!', "Hello, friend! Sorry about what's gonna happen."],
+      taunt: ["CONKY: Hey, dummy! Yeah, you!", 'Conky says you smell like a shed.', 'Steve French would eat you alive.', 'I fix carts. I can fix your face too.', 'The Green Bastard is from parts unknown!'],
       special: ["Go get 'em, kitty!", 'Kitty, no! ...Yes!'], super: ["CART'S COMIN' THROUGH!"],
       hit: ['My glasses!', "Oh, that's not decent!", 'Ow, frig!'],
       win: ['DEEEECENT!', 'Sorry, friend. Kitties gotta eat.', "I'd high five you but you're unconscious."],
@@ -227,31 +232,34 @@ const ROSTER = [
     alt: { shirt: '#c9b48a' },
     special: { name: 'LIQUOR BOTTLE', type: 'throw', proj: 'bottle' }, super: { name: 'THE SHIT HAWKS', fn: 'hawks' },
     lines: {
-      intro: ['I am the liquor.', 'The shit-clouds are rolling in, boys.', "Smell that? That's a shit-front moving in."],
+      intro: ['Randy, I am the liquor.', 'The winds of shit are blowing, boys.', "There's a shiticane coming."],
+      taunt: ["A shit leopard can't change its spots.", "The shit apple doesn't fall far from the shit tree.", 'Hold on to the shit ropes, Randy!', "We're in the eye of a shit blizzard.", 'Feel that? Shitquake.'],
       special: ['Have a drink on me!', 'Last call!'], super: ['THE SHIT HAWKS, RANDY!'],
       hit: ['RANDY!', 'Ow! My liquor!', "You're on thin shit-ice!"],
-      win: ['Shit-barometer reading: you lost.', 'Randy! Fetch me a victory drink.', 'The shit-storm has passed.'],
+      win: ['Shitageddon is over.', 'Randy! Fetch me a victory drink.', "That's how you sail the shit river."],
       lose: ['The shit... it got me, Randy...', "I'm not drunk. I'm just... lying down."] } },
   { id: 'randy', name: 'RANDY', meter: 'CHEESEBURGERS',
-    tag: 'Assistant supervisor. Shirt not included. Cheeseburgers required.',
+    tag: 'Assistant supervisor. AKA Bobandy, the Cheeseburger Walrus, Lord of the Onion Rings.',
     hp: 125, spd: 3.3, pow: 1.1, jump: 13.5, decency: 5,
     look: { skin: '#e6ab88', hair: '#2a1f17', hairStyle: 'messy', beard: 'mustache', mustache: '#2a1f17', shirt: null, pants: '#33465e', shoes: '#141414', belly: 20, build: 50 },
     alt: { pants: '#5a4632' },
     special: { name: 'BELLY BUMP', type: 'dash', move: 'belly' }, super: { name: 'CHEESEBURGER BINGE', fn: 'burgers' },
     lines: {
       intro: ["Mr. Lahey, I'm hungry.", 'Shirts are for quitters.', "Let's settle this. Then burgers."],
+      taunt: ['Lord of the Onion Rings, baby!', 'Cheeseburger Walrus, comin\' through!', 'Mr. Lahey, he\'s lookin\' at me!', 'Bobandy says hi.'],
       special: ['BELLY!', 'Feel the gut!'], super: ['CHEESEBURGERS!!!'],
       hit: ['Oof, my belly!', 'Mr. Lahey!', 'Not the nipples!'],
       win: ['Mr. Lahey, did you see that?!', "I'd celebrate but I already ate the cake.", 'Assistant supervisor, baby!'],
       lose: ['Somebody get me a cheeseburger...', 'I need a nap. And a burger.'] } },
   { id: 'jroc', name: 'J-ROC', meter: 'RHYMES',
-    tag: "Sunnyvale's finest rapper. Know what I'm sayin'?",
+    tag: "Sunnyvale's finest rapper. Also sells stuff that fell off a truck. Nomesayin?",
     hp: 95, spd: 4.8, pow: 0.95, jump: 16, decency: 7,
     look: { skin: '#efc3a0', hair: '#3a2a1a', hairStyle: 'cap', cap: '#c0392b', beard: 'chin', shirt: '#efefef', sleeve: 'short', pants: '#2b4fa0', shoes: '#efefef', belly: 0, build: 42, chain: true, baggy: true },
     alt: { shirt: '#e8c33a', cap: '#2b2b2b' },
     special: { name: 'MIC CHECK', type: 'throw', proj: 'wave' }, super: { name: 'MIXTAPE DROP', fn: 'boombox' },
     lines: {
       intro: ["J-Roc in the house, know'm sayin'?", 'Yo, check it.', "Sunnyvale's own, baby."],
+      taunt: ['J-Roc and T, nomesayin?', 'Buy my mixtape. Fell off a truck.', 'Gnome sayin?', 'Yo, T! Get the camera!'],
       special: ['Mic check!', "Know'm sayin'?!"], super: ["MIXTAPE DROP, KNOW'M SAYIN'!"],
       hit: ['Yo, not the hat!', 'Whoa, chill, homes!', 'Respect the flow!'],
       win: ["Peace out, know what I'm sayin'?", "That's straight outta Sunnyvale.", 'Drop the beat! ...Somebody drop the beat.'],
@@ -278,8 +286,8 @@ const DIFFS = [
 
 const HIT_WORDS = ['WHAP!', 'BOF!', 'SMACK!', 'FRIG!', 'POW!', 'DECENT!', 'GREASY!'];
 const COMBO_SUFFIX = ['DECENT!', "FRIGGIN' NICE!", 'GREASY!', 'SHIT-TASTIC!', 'BOYS!'];
-const FIGHT_SUBS = ['FRIG OFF & FIGHT!', 'GET TWO BIRDS STONED!', "IT'S NOT ROCKET APPLIANCES!", 'WORST CASE ONTARIO!', "SMOKES, LET'S GO!"];
-const KO_SUBS = ['Somebody call Randy.', 'The shit-winds have spoken.', 'Somebody get the liquor.', "That's gonna leave a mark, bud.", 'Lights out in Sunnyvale.'];
+const FIGHT_SUBS = ['FRIG OFF & FIGHT!', 'GET TWO BIRDS STONED AT ONCE!', "IT'S NOT ROCKET APPLIANCES!", 'WORST CASE ONTARIO!', "SMOKES, LET'S GO!", 'SURVIVAL OF THE FITNESS!'];
+const KO_SUBS = ['A full-blown shiticane.', 'The winds of shit have spoken.', 'Somebody get the liquor.', "That's a shitquake, Randy.", 'Lights out in Sunnyvale.', 'Denial and error, bud.'];
 const TIPS = [
   'Hold BACK to block. Julian does it one-handed.',
   "Fill your meter, then hit SUPER. Ricky's car has no door and no brakes.",
@@ -290,6 +298,12 @@ const TIPS = [
   'No kitties are harmed. They always land on their feet.',
   'Projectiles cancel each other out. Liquor vs. kitty is a tie.',
   "Hit someone 3 times in a row for a combo. That's science.",
+  "Press DOWN to taunt. It fills your meter and makes enemies.",
+  "The Shitmobile is a green '75 Chrysler New Yorker. It belonged to Julian's grandmother.",
+  'Bubbles got $18 a cart, fixing shopping carts. Respect the cart.',
+  "Steve French is a cougar. Bubbles insists he's just a big kitty.",
+  'Julian once rolled a car and climbed out still holding his drink.',
+  "Randy's nicknames: Bobandy, Cheeseburger Walrus, Lord of the Onion Rings.",
 ];
 
 // =====================================================================
@@ -405,7 +419,7 @@ document.getElementById('fsBtn').addEventListener('click', () => {
 // =====================================================================
 const G = {
   scene: 'title', mode: 1, diff: 1, menu: 0, clicks: [], frame: 0, tip: 0,
-  sel: null, f: [], projs: [], haz: [], fx: [], pops: [], sched: [], combos: [null, null],
+  sel: null, stage: 0, cam: null, stageSel: null, f: [], projs: [], haz: [], fx: [], pops: [], sched: [], combos: [null, null],
   round: 1, timer: 99, timerF: 0, phase: 'intro', phaseT: 0, banner: null,
   freeze: null, hitstop: 0, impact: 0, shake: 0, slow: 0, paused: false, amb: null, result: null,
 };
@@ -482,6 +496,10 @@ class Fighter {
         if (pad.specialP && this.cd <= 0) { this.doSpecial(); break; }
         if (pad.punchP) { this.startAtk('punch'); break; }
         if (pad.kickP) { this.startAtk('kick'); break; }
+        if (pad.downP && this.def.lines.taunt) {
+          this.state = 'taunt'; this.stun = 60; this.vx = 0;
+          this.say(pick(this.def.lines.taunt), 75); this.meter = Math.min(100, this.meter + 10); break;
+        }
         if (pad.up) {
           this.vy = -this.def.jump; this.vx = (fwd ? 1 : back ? -1 : 0) * this.facing * spd * 1.15;
           this.state = 'jump'; this.airUsed = false; this.sq = 1.25; Snd.play('jump'); break;
@@ -507,6 +525,7 @@ class Fighter {
       case 'rush': this.tickRush(opp); break;
       case 'ko': this.vx *= 0.9; break;
       case 'win': this.vx = 0; break;
+      case 'taunt': this.vx = 0; if (--this.stun <= 0) this.state = 'idle'; break;
     }
 
     if (this.state !== 'rush') this.x += this.vx;
@@ -552,7 +571,12 @@ class Fighter {
     const f = this.facing, base = { owner: this, dir: f };
     switch (this.def.special.proj) {
       case 'brick': G.projs.push(new Proj(Object.assign(base, { kind: 'brick', x: this.x + f * 30, y: this.y - 128, vx: f * 7.5, vy: -7, g: 0.38, w: 26, h: 16, dmg: 8, kb: 4, hs: 16, bs: 10, spin: 0.25 }))); break;
-      case 'cat': G.projs.push(new Proj(Object.assign(base, { kind: 'cat', x: this.x + f * 34, y: this.y - 112, vx: f * 8.5, vy: -1, g: 0.03, w: 40, h: 24, dmg: 9, kb: 5, hs: 16, bs: 10 }))); Snd.play('meow'); break;
+      case 'cat':
+        if (Math.random() < 0.2) { // every so often the "kitty" is Steve French, the cougar
+          G.projs.push(new Proj(Object.assign(base, { kind: 'cat', steve: true, x: this.x + f * 40, y: this.y - 100, vx: f * 7, vy: -1, g: 0.03, w: 74, h: 42, dmg: 14, kb: 9, hs: 20, bs: 14, kd: true })));
+          pop(this.x, this.y - 210, 'STEVE FRENCH!', '#e6b45a', 30); this.say('Get him, Steve French!', 60); Snd.play('caw');
+        } else G.projs.push(new Proj(Object.assign(base, { kind: 'cat', x: this.x + f * 34, y: this.y - 112, vx: f * 8.5, vy: -1, g: 0.03, w: 40, h: 24, dmg: 9, kb: 5, hs: 16, bs: 10 })));
+        Snd.play('meow'); break;
       case 'bottle': G.projs.push(new Proj(Object.assign(base, { kind: 'bottle', x: this.x + f * 30, y: this.y - 132, vx: f * 7.8, vy: -8.5, g: 0.42, w: 16, h: 30, dmg: 11, kb: 5, hs: 18, bs: 11, spin: 0.3 }))); break;
       case 'wave': G.projs.push(new Proj(Object.assign(base, { kind: 'wave', x: this.x + f * 40, y: this.y - 100, vx: f * 6.5, w: 46, h: 76, dmg: 8, kb: 5, hs: 16, bs: 10, life: 160 }))); Snd.play('scratch'); break;
     }
@@ -809,12 +833,13 @@ class AI {
       case 'special': p.specialP = true; this.set('idle', this.wait()); break;
       case 'super': p.superP = true; this.set('idle', this.wait()); break;
       case 'jumpin': p.up = true; p[fw] = true; this.set('air', 50); break;
+      case 'taunt': p.downP = true; this.set('idle', 70); break;
     }
     return p;
   }
   choose(f, opp, dist) {
     const D = DIFFS[G.diff], r = Math.random();
-    if (opp.state === 'down' || opp.state === 'getup') { this.set(dist > 130 ? 'approach' : 'idle', 12); return; }
+    if (opp.state === 'down' || opp.state === 'getup') { this.set(dist > 130 ? 'approach' : (r < 0.25 ? 'taunt' : 'idle'), dist > 130 ? 12 : 1); return; }
     if (f.meter >= 100 && r < 0.45 && dist < 520) { this.set('super', 1); return; }
     if (dist > 300) {
       if (f.cd <= 0 && r < 0.45) this.set('special', 1); else this.set('approach', 20 + this.wait());
@@ -898,9 +923,38 @@ function updSelect() {
     else if (S.done[0]) { S.done[0] = false; S.done[1] = false; S.cpuT = 0; }
     else toTitle();
   }
-  if (S.done[0] && S.done[1]) { S.go = (S.go || 0) + 1; if (S.go > 50) startMatch(); }
+  if (S.done[0] && S.done[1]) { S.go = (S.go || 0) + 1; if (S.go > 50) toStageSelect(); }
 }
 
+const STAGE_CARD = i => ({ x: 60 + i * 290, y: 150, w: 260, h: 230 });
+function toStageSelect() { G.scene = 'stage'; G.stageSel = { cur: G.stage || 0, t: 0 }; }
+function updStageSelect() {
+  const S = G.stageSel; S.t++;
+  if (jp('KeyA', 'ArrowLeft')) { S.cur = (S.cur + STAGES.length - 1) % STAGES.length; Snd.play('select'); }
+  if (jp('KeyD', 'ArrowRight')) { S.cur = (S.cur + 1) % STAGES.length; Snd.play('select'); }
+  G.stage = S.cur;
+  const go = () => { Snd.play('confirm'); startMatch(); };
+  if (S.t > 10 && jp('KeyF', 'KeyK', 'Enter', 'Space')) return go();
+  for (const p of G.clicks) for (let i = 0; i < STAGES.length; i++) if (inRect(p, STAGE_CARD(i))) { S.cur = G.stage = i; return go(); }
+  if (jp('Escape')) { G.scene = 'select'; G.sel.done = [false, false]; G.sel.go = 0; G.sel.cpuT = 0; }
+}
+function renderStageSelect() {
+  const S = G.stageSel;
+  drawStage();
+  c.fillStyle = 'rgba(8,6,12,0.72)'; c.fillRect(0, 0, W, H);
+  txt('PICK A SPOT TO SCRAP', W / 2, 60, 30, '#ffb02e', 'center', DISP, 6);
+  txt(`${ROSTER[G.sel.cur[0]].name}  VS  ${ROSTER[G.sel.cur[1]].name}`, W / 2, 104, 20, '#f3e9d2', 'center', DISP, 4);
+  STAGES.forEach((st, i) => {
+    const r = STAGE_CARD(i), on = S.cur === i;
+    c.fillStyle = '#1c1621'; c.strokeStyle = OUT; c.lineWidth = 3; rrect(r.x, r.y, r.w, r.h, 10); c.fill(); c.stroke();
+    c.save(); rrect(r.x + 6, r.y + 6, r.w - 12, 140, 6); c.clip(); c.drawImage(st.bg, 120, 120, 720, 405, r.x + 6, r.y + 6, r.w - 12, 140); c.restore();
+    txt(st.name, r.x + r.w / 2, r.y + 170, 15, on ? '#ffb02e' : '#f3e9d2', 'center', DISP, 0);
+    c.font = `700 15px ${BODY}`;
+    wrap(st.sub, r.w - 24, c.font).forEach((l, k) => txt(l, r.x + r.w / 2, r.y + 196 + k * 17, 15, '#a39482', 'center', BODY, 0));
+    if (on) { c.strokeStyle = '#ffb02e'; c.lineWidth = G.frame % 20 < 10 ? 5 : 3; rrect(r.x - 5, r.y - 5, r.w + 10, r.h + 10, 13); c.stroke(); }
+  });
+  txt('LEFT / RIGHT TO CHOOSE   ENTER OR TAP TO FIGHT   ESC TO GO BACK', W / 2, 430, 15, '#a39482', 'center', BODY, 0);
+}
 function startMatch() {
   const a = ROSTER[G.sel.cur[0]], b = ROSTER[G.sel.cur[1]];
   G.f = [new Fighter(a, 0, false, false), new Fighter(b, 1, G.mode === 1, a === b)];
@@ -1048,10 +1102,12 @@ function update() {
   G.frame++;
   if (jp('KeyM')) setMuted(!Snd.muted);
   updAmbient();
+  updCameos();
   if (G.scene === 'title') updTitle();
   else if (G.scene === 'select') updSelect();
   else if (G.scene === 'fight') updFight();
   else if (G.scene === 'result') updResult();
+  else if (G.scene === 'stage') updStageSelect();
   G.clicks.length = 0;
 }
 
@@ -1165,6 +1221,7 @@ function drawSpriteFighter(f, opts) {
   if (st === 'launched') rot = -0.9 * f.facing;
   if (st === 'down' || st === 'ko') rot = -Math.PI / 2 * f.facing;
   if (st === 'win') dy = -Math.abs(Math.sin(t * 0.14)) * 12;
+  if (st === 'taunt') { rot = -0.08 * f.facing + Math.sin(t * 0.35) * 0.04; dy = -Math.abs(Math.sin(t * 0.35)) * 4; }
   if (f.atk) { const a = f.atk, ph = f.atkT <= a.s ? 's' : f.atkT <= a.s + a.a ? 'a' : 'r'; if (ph === 's') rot = -0.05 * f.facing; if (ph === 'a' && !a.dash) { rot = 0.06 * f.facing; c.translate(f.facing * 6, 0); } }
   if (f.dizzy > 0 && st !== 'ko') rot += Math.sin(t * 0.15) * 0.06;
   if (st === 'down' || st === 'ko') c.translate(f.facing * 95, -36);
@@ -1254,6 +1311,7 @@ function getPose(f) {
   else if (st === 'launched') { p.rot = -0.9; p.face = 'hurt'; p.aF = [2.6, 0.5]; p.aB = [2.2, 0.6]; p.lF = [0.7, 0.8]; p.lB = [0.2, 0.5]; }
   else if (st === 'down' || st === 'ko') { p.rot = -Math.PI / 2; p.face = st === 'ko' ? 'ko' : 'hurt'; p.aF = [2.9, 0.3]; p.aB = [2.6, 0.4]; p.lF = [0.2, 0.15]; p.lB = [-0.05, 0.25]; p.bob = 0; }
   else if (st === 'getup') { p.lean = -0.3; p.lF = [1.1, 2.1]; p.lB = [0.3, 1.7]; p.aF = [0.9, 0.6]; p.face = 'grit'; }
+  else if (st === 'taunt') { p.aF = [1.6, 0.05]; p.aB = [-0.6, 2.4]; p.lean = -0.08; p.face = 'happy'; p.bob = Math.sin(t * 0.3) * 2; }
   else if (st === 'win') { p.aF = [2.3, 0.5 + Math.sin(t * 0.25) * 0.2]; p.aB = [-2.4, -0.4]; p.bob = -Math.abs(Math.sin(t * 0.14)) * 10; p.face = 'happy'; }
   else if (st === 'rush') {
     const left = (f.rushT % 12) < 6, hit = (f.rushT % 6) < 3;
@@ -1726,11 +1784,11 @@ function drawCart(x, y, dir, t) {
   c.restore();
 }
 
-function drawCat(x, y, dir, t, s = 1) {
+function drawCat(x, y, dir, t, s = 1, coat = '#e69a3c') {
   c.save(); c.translate(x, y); c.scale(dir * s, s);
-  c.strokeStyle = OUT; c.lineWidth = 2.5; c.fillStyle = '#e69a3c';
+  c.strokeStyle = OUT; c.lineWidth = 2.5; c.fillStyle = coat;
   c.beginPath(); c.moveTo(-16, 0); c.quadraticCurveTo(-30, -8 + Math.sin(t * 0.4) * 6, -26, -18); c.stroke();
-  c.lineWidth = 2.5; c.strokeStyle = '#e69a3c'; c.beginPath(); c.moveTo(-16, 0); c.quadraticCurveTo(-30, -8 + Math.sin(t * 0.4) * 6, -26, -18); c.stroke();
+  c.lineWidth = 2.5; c.strokeStyle = coat; c.beginPath(); c.moveTo(-16, 0); c.quadraticCurveTo(-30, -8 + Math.sin(t * 0.4) * 6, -26, -18); c.stroke();
   c.strokeStyle = OUT;
   c.beginPath(); c.ellipse(0, 0, 17, 9, 0, 0, Math.PI * 2); c.fill(); c.stroke();
   for (const lx of [-10, -4, 6, 12]) { c.beginPath(); c.moveTo(lx, 6); c.lineTo(lx + 3, 13); c.stroke(); }
@@ -1752,7 +1810,7 @@ function drawCar(x, y, dir, t) {
   const g = c.createLinearGradient(95, 0, 260, 0); g.addColorStop(0, 'rgba(255,240,170,0.45)'); g.addColorStop(1, 'rgba(255,240,170,0)');
   c.fillStyle = g; c.beginPath(); c.moveTo(95, -6); c.lineTo(260, -40); c.lineTo(260, 40); c.lineTo(95, 6); c.fill();
   // cabin
-  c.fillStyle = '#5e1c1c';
+  c.fillStyle = '#34502f';
   c.beginPath(); c.moveTo(-58, -12); c.lineTo(-38, -44); c.lineTo(34, -44); c.lineTo(58, -12); c.closePath(); c.fill(); c.stroke();
   c.fillStyle = '#2a3440'; c.beginPath(); c.moveTo(-48, -14); c.lineTo(-33, -38); c.lineTo(-4, -38); c.lineTo(-4, -14); c.closePath(); c.fill();
   // taped plastic rear window
@@ -1762,7 +1820,8 @@ function drawCar(x, y, dir, t) {
   c.fillStyle = '#2a3440'; c.beginPath(); c.moveTo(2, -14); c.lineTo(2, -38); c.lineTo(31, -38); c.lineTo(48, -14); c.closePath(); c.fill();
   if (hasSprite('ricky')) drawPortrait(ROSTER[0].look, 20, -26, 0.5, false); else { c.save(); c.scale(0.62, 0.62); drawHead(ROSTER[0].look, 'happy', 28, -38); c.restore(); }
   // body
-  c.fillStyle = '#6e1f1f'; rrect(-98, -14, 196, 34, 8); c.fill(); c.stroke();
+  c.fillStyle = '#466a3a'; rrect(-98, -14, 196, 34, 8); c.fill(); c.stroke();
+  c.fillStyle = '#c9c4b4'; c.fillRect(-96, 4, 192, 3);
   c.fillStyle = '#8a4b22'; c.beginPath(); c.ellipse(-62, 6, 14, 6, 0.3, 0, Math.PI * 2); c.fill(); c.beginPath(); c.ellipse(70, -4, 9, 5, -0.2, 0, Math.PI * 2); c.fill();
   // missing door
   c.fillStyle = '#1a0d0d'; rrect(6, -12, 44, 28, 3); c.fill();
@@ -1810,7 +1869,7 @@ function drawProj(p) {
       c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(-10, -6, 9, 3);
       c.fillStyle = '#c9d6b0'; c.font = `8px ${DISP}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('HASH', 0, 2);
       break;
-    case 'cat': drawCat(p.x, p.y, p.falling ? 1 : p.dir, p.t, 1); break;
+    case 'cat': drawCat(p.x, p.y, p.falling ? 1 : p.dir, p.t, p.steve ? 1.9 : 1, p.steve ? '#c79a5e' : '#e69a3c'); break;
     case 'bottle':
       c.translate(p.x, p.y); c.rotate(p.rot); c.strokeStyle = OUT; c.lineWidth = 2;
       c.fillStyle = '#2f6b33'; rrect(-6, -9, 12, 24, 3); c.fill(); c.stroke(); rrect(-3, -17, 6, 9, 1); c.fill(); c.stroke();
@@ -1894,10 +1953,8 @@ function drawSpeech(f) {
 // =====================================================================
 //  DRAWING: the park
 // =====================================================================
-const BG = document.createElement('canvas'); BG.width = W; BG.height = H;
 const STAGE_LIGHTS = [];
-function buildStage() {
-  const b = BG.getContext('2d');
+function buildPark(b) {
   const save = c; // reuse helpers by temporarily drawing on bg context
   let g = b.createLinearGradient(0, 0, 0, 420);
   g.addColorStop(0, '#070a1f'); g.addColorStop(0.5, '#1f1838'); g.addColorStop(1, '#55304a');
@@ -1986,7 +2043,115 @@ function buildStage() {
   g = b.createRadialGradient(W / 2, H / 2, 200, W / 2, H / 2, 620); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.55)');
   b.fillStyle = g; b.fillRect(0, 0, W, H);
   // string light anchor points
+  STAGE_LIGHTS.length = 0;
   for (let i = 0; i <= 22; i++) { const t = i / 22; STAGE_LIGHTS.push({ x: 290 + t * 340, y: 300 + Math.sin(t * Math.PI) * 24, col: ['#ff5a5a', '#ffd34d', '#5ad1ff', '#7ee07e'][i % 4] }); }
+}
+// Season 4, "The Green Bastard": Ricky's community day puts a wrestling ring in the park.
+function buildRing(b) {
+  buildPark(b);
+  b.fillStyle = 'rgba(10,6,20,0.45)'; b.fillRect(0, 0, W, H);
+  // crowd in lawn chairs behind the ring
+  for (let i = 0; i < 26; i++) {
+    const x = 20 + i * 37 + rnd(-6, 6), y = 392 + rnd(-6, 6), col = pick(['#2b2533', '#352c3a', '#2a3036']);
+    b.fillStyle = col; b.beginPath(); b.arc(x, y - 22, 9, 0, Math.PI * 2); b.fill(); b.fillRect(x - 11, y - 14, 22, 26);
+  }
+  // mat, apron and skirt
+  b.fillStyle = '#d9d3c2'; b.strokeStyle = '#120e14'; b.lineWidth = 3;
+  b.beginPath(); b.moveTo(40, 418); b.lineTo(920, 418); b.lineTo(960, 492); b.lineTo(0, 492); b.closePath(); b.fill(); b.stroke();
+  b.strokeStyle = 'rgba(0,0,0,0.12)'; b.lineWidth = 2; for (let i = 0; i < 9; i++) { b.beginPath(); b.moveTo(40 + i * 110, 418); b.lineTo(i * 120, 492); b.stroke(); }
+  b.fillStyle = '#23407a'; b.fillRect(0, 492, W, 48);
+  b.fillStyle = '#f3e9d2'; b.font = `20px ${DISP}`; b.textAlign = 'center'; b.textBaseline = 'middle';
+  b.fillText('SUNNYVALE COMMUNITY DAY', W / 2, 516);
+  // corner posts and the back ropes
+  for (const px of [60, 900]) { b.fillStyle = '#c0392b'; b.strokeStyle = '#120e14'; b.lineWidth = 3; b.fillRect(px - 7, 300, 14, 122); b.strokeRect(px - 7, 300, 14, 122); b.fillStyle = '#e8e2d0'; b.fillRect(px - 9, 296, 18, 8); }
+  for (const [y, col] of [[322, '#e8e2d0'], [352, '#c0392b'], [382, '#e8e2d0']]) { b.strokeStyle = '#120e14'; b.lineWidth = 6; b.beginPath(); b.moveTo(60, y); b.lineTo(900, y); b.stroke(); b.strokeStyle = col; b.lineWidth = 3.5; b.stroke(); }
+  // banner strung between the power poles
+  b.fillStyle = '#f2e6c8'; b.strokeStyle = '#120e14'; b.lineWidth = 3;
+  b.beginPath(); b.moveTo(250, 196); b.lineTo(710, 196); b.lineTo(700, 246); b.lineTo(260, 246); b.closePath(); b.fill(); b.stroke();
+  b.fillStyle = '#b8261d'; b.font = `22px ${DISP}`; b.fillText('WRESTLING TONIGHT!', 480, 214);
+  b.fillStyle = '#2c6b2f'; b.font = `700 17px ${BODY}`; b.fillText('FEATURING THE GREEN BASTARD, FROM PARTS UNKNOWN', 480, 236);
+}
+// Every season seems to end with somebody back in jail.
+function buildJail(b) {
+  let g = b.createLinearGradient(0, 0, 0, 300); g.addColorStop(0, '#16233a'); g.addColorStop(1, '#5b4a5c');
+  b.fillStyle = g; b.fillRect(0, 0, W, H);
+  for (let i = 0; i < 70; i++) { b.fillStyle = `rgba(255,250,235,${rnd(0.15, 0.6).toFixed(2)})`; b.fillRect(rnd(0, W), rnd(0, 160), 1.4, 1.4); }
+  // the wall
+  b.fillStyle = '#8b8a86'; b.strokeStyle = '#120e14'; b.lineWidth = 3; b.fillRect(0, 196, W, 220); b.strokeRect(-2, 196, W + 4, 220);
+  b.strokeStyle = 'rgba(0,0,0,0.18)'; b.lineWidth = 1.5;
+  for (let y = 216; y < 416; y += 20) { b.beginPath(); b.moveTo(0, y); b.lineTo(W, y); b.stroke(); for (let x = (y / 20) % 2 ? 0 : 30; x < W; x += 60) { b.beginPath(); b.moveTo(x, y - 20); b.lineTo(x, y); b.stroke(); } }
+  // razor wire
+  b.strokeStyle = '#b9bcc0'; b.lineWidth = 1.6;
+  for (let x = 0; x < W; x += 16) { b.beginPath(); b.arc(x + 8, 188, 9, 0, Math.PI * 2); b.stroke(); }
+  // guard tower
+  b.fillStyle = '#6d6c69'; b.strokeStyle = '#120e14'; b.lineWidth = 3;
+  b.fillRect(820, 90, 26, 110); b.strokeRect(820, 90, 26, 110); b.fillRect(790, 60, 86, 40); b.strokeRect(790, 60, 86, 40);
+  b.fillStyle = '#ffd98a'; b.fillRect(802, 70, 62, 18);
+  b.fillStyle = '#3d3b39'; b.beginPath(); b.moveTo(780, 60); b.lineTo(833, 34); b.lineTo(886, 60); b.closePath(); b.fill(); b.stroke();
+  // wall paint and tally marks counting down the days
+  b.fillStyle = '#f2efe6'; b.font = `30px ${DISP}`; b.textAlign = 'center'; b.textBaseline = 'middle'; b.fillText('C  BLOCK', 340, 250);
+  b.font = `700 16px ${BODY}`; b.fillStyle = '#e8e2d0'; b.fillText('EXERCISE YARD  •  NO LIQUOR  •  NO DOPE  •  NO CARTS', 340, 280);
+  b.strokeStyle = 'rgba(245,240,230,0.8)'; b.lineWidth = 2.5;
+  for (let grp = 0; grp < 6; grp++) { const x0 = 470 + grp * 34, y0 = 300; for (let k = 0; k < 4; k++) { b.beginPath(); b.moveTo(x0 + k * 6, y0); b.lineTo(x0 + k * 6, y0 + 30); b.stroke(); } b.beginPath(); b.moveTo(x0 - 3, y0 + 26); b.lineTo(x0 + 22, y0 + 4); b.stroke(); }
+  b.fillStyle = '#f2efe6'; b.font = `700 14px ${BODY}`; b.fillText('DAYS TILL LIQUOR DAY', 568, 350);
+  // basketball hoop and bench
+  b.strokeStyle = '#2a2a2a'; b.lineWidth = 6; b.beginPath(); b.moveTo(110, 420); b.lineTo(110, 250); b.lineTo(140, 250); b.stroke();
+  b.fillStyle = '#f2efe6'; b.strokeStyle = '#120e14'; b.lineWidth = 3; b.fillRect(132, 222, 50, 36); b.strokeRect(132, 222, 50, 36);
+  b.strokeStyle = '#d0562a'; b.lineWidth = 3; b.beginPath(); b.ellipse(158, 262, 13, 4, 0, 0, Math.PI * 2); b.stroke();
+  b.fillStyle = '#5a4a3a'; b.fillRect(640, 404, 150, 10); b.fillRect(652, 414, 8, 14); b.fillRect(770, 414, 8, 14);
+  // asphalt yard
+  g = b.createLinearGradient(0, 416, 0, H); g.addColorStop(0, '#4a4a4c'); g.addColorStop(1, '#2a2a2c');
+  b.fillStyle = g; b.fillRect(0, 416, W, H - 416);
+  b.strokeStyle = 'rgba(240,220,120,0.55)'; b.lineWidth = 4; b.beginPath(); b.moveTo(0, 452); b.lineTo(W, 452); b.stroke();
+  for (let i = 0; i < 70; i++) { b.fillStyle = `rgba(0,0,0,${rnd(0.08, 0.2).toFixed(2)})`; b.beginPath(); b.ellipse(rnd(0, W), rnd(420, H), rnd(4, 18), rnd(1, 3), 0, 0, Math.PI * 2); b.fill(); }
+  g = b.createRadialGradient(W / 2, H / 2, 200, W / 2, H / 2, 620); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.55)');
+  b.fillStyle = g; b.fillRect(0, 0, W, H);
+}
+const STAGES = [
+  { name: 'SUNNYVALE TRAILER PARK', sub: "Home. Mr. Lahey's park, Ricky's rules.", build: buildPark, sky: true },
+  { name: 'COMMUNITY DAY RING', sub: 'Season 4: The Green Bastard', build: buildRing, sky: true },
+  { name: 'C BLOCK YARD', sub: 'Where the boys keep ending up', build: buildJail, sky: false },
+];
+function buildStages() {
+  for (const st of STAGES) { st.bg = document.createElement('canvas'); st.bg.width = W; st.bg.height = H; const save = c; st.build(st.bg.getContext('2d')); c = save; }
+}
+// a guy in a green mask and cape cheering from the corner
+function drawGreenBastard(x, y, t) {
+  const hop = Math.abs(Math.sin(t * 0.12)) * 6, wave = Math.sin(t * 0.2) * 0.5;
+  c.save(); c.translate(x, y - hop); c.strokeStyle = OUT; c.lineWidth = 2.5;
+  c.fillStyle = '#2f8a3a'; c.beginPath(); c.moveTo(-12, -58); c.quadraticCurveTo(-26 + wave * 6, -20, -18, 0); c.lineTo(12, 0); c.quadraticCurveTo(20, -20, 12, -58); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle = '#5d86c4'; rrect(-10, -58, 20, 34, 5); c.fill(); c.stroke();
+  c.fillStyle = '#3d5a80'; c.fillRect(-9, -24, 8, 24); c.fillRect(1, -24, 8, 24); c.strokeRect(-9, -24, 8, 24); c.strokeRect(1, -24, 8, 24);
+  c.lineWidth = 6; c.strokeStyle = OUT; c.beginPath(); c.moveTo(-9, -54); c.lineTo(-20, -78 + wave * 8); c.moveTo(9, -54); c.lineTo(20, -78 - wave * 8); c.stroke();
+  c.lineWidth = 4; c.strokeStyle = '#f1c29e'; c.stroke();
+  c.fillStyle = '#2f8a3a'; c.lineWidth = 2.5; c.strokeStyle = OUT; circle(0, -70, 11); c.fill(); c.stroke();
+  c.fillStyle = '#f2efe6'; c.beginPath(); c.ellipse(-4, -71, 3.5, 2.5, 0, 0, Math.PI * 2); c.ellipse(4, -71, 3.5, 2.5, 0, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = '#c4282a'; c.lineWidth = 1.8; c.beginPath(); c.arc(-4, -71, 3.5, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.arc(4, -71, 3.5, 0, Math.PI * 2); c.stroke();
+  c.restore();
+  txt('THE GREEN BASTARD', x, y - 100 - hop, 11, '#7ee07e', 'center', DISP, 3);
+}
+// two hapless fans of Ricky and Julian, hauling a couch across the park
+function drawCoryTrevor(cam) {
+  const x = cam.x, y = 412, t = cam.t;
+  c.save(); c.translate(x, y); c.scale(cam.vx > 0 ? 1 : -1, 1);
+  const step = Math.sin(t * 0.35) * 4;
+  c.fillStyle = '#6b4a3a'; c.strokeStyle = OUT; c.lineWidth = 2.5; rrect(-34, -38, 68, 18, 4); c.fill(); c.stroke(); rrect(-34, -50, 14, 30, 4); c.fill(); c.stroke();
+  for (const [px, shirt, cap] of [[-44, '#c0392b', '#2b2b2b'], [44, '#e8c33a', null]]) {
+    c.fillStyle = '#2f3a52'; c.fillRect(px - 5, -22, 4, 22 + step); c.fillRect(px + 1, -22, 4, 22 - step);
+    c.fillStyle = shirt; rrect(px - 7, -46, 14, 26, 4); c.fill(); c.stroke();
+    c.fillStyle = '#ecb592'; circle(px, -54, 7); c.fill(); c.stroke();
+    if (cap) { c.fillStyle = cap; c.beginPath(); c.arc(px, -56, 7.5, Math.PI, 0); c.fill(); c.stroke(); }
+  }
+  c.restore();
+  txt('CORY & TREVOR', x, y - 74, 11, '#f3e9d2', 'center', DISP, 3);
+}
+function updCameos() {
+  if (G.stage !== 0) { G.cam = null; return; }
+  if (!G.cam && Math.random() < 0.0015) {
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    G.cam = { kind: Math.random() < 0.6 ? 'ct' : 'steve', x: dir > 0 ? -90 : W + 90, vx: dir * (Math.random() < 0.6 ? 1.6 : 2.6), t: 0 };
+  }
+  if (G.cam) { G.cam.x += G.cam.vx; G.cam.t++; if (G.cam.x < -120 || G.cam.x > W + 120) G.cam = null; }
 }
 const CLOUDS = [[120, 60, 1], [430, 110, 0.8], [690, 40, 1.1], [980, 140, 0.7]].map(([x, y, s]) => ({ x, y, s, v: 0.12 + s * 0.08 }));
 function drawCloud(x, y, s) {
@@ -1996,8 +2161,22 @@ function drawCloud(x, y, s) {
   c.fillStyle = 'rgba(255,255,255,0.08)'; for (const [dx, dy, r] of parts) { circle(x + dx * s - r * 0.25 * s, y + dy * s - r * 0.3 * s, r * 0.5 * s); c.fill(); }
 }
 function drawStage() {
-  c.drawImage(BG, 0, 0, W, H);
-  for (const cl of CLOUDS) { cl.x -= cl.v; if (cl.x < -120) cl.x = W + 60; drawCloud(cl.x, cl.y, cl.s); }
+  const st = STAGES[G.stage || 0];
+  c.drawImage(st.bg, 0, 0, W, H);
+  if (st.sky) for (const cl of CLOUDS) { cl.x -= cl.v; if (cl.x < -120) cl.x = W + 60; drawCloud(cl.x, cl.y, cl.s); }
+  if (G.stage === 1) {
+    drawGreenBastard(880, 470, G.frame);
+    if (G.frame % 23 < 3) { const k = Math.floor(G.frame / 23), fx = 30 + (k * 197) % 900, fy = 362 + (k * 53) % 30; c.fillStyle = 'rgba(255,255,255,0.85)'; c.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? 3 : 11; c.lineTo(fx + Math.cos(i * Math.PI / 4) * r, fy + Math.sin(i * Math.PI / 4) * r); } c.fill(); }
+  }
+  if (G.stage === 2) {
+    const tx = 470 + Math.sin(G.frame * 0.012) * 420;
+    c.save(); c.globalAlpha = 0.14; c.fillStyle = '#fff6c8'; c.beginPath(); c.moveTo(833, 80); c.lineTo(tx - 70, H); c.lineTo(tx + 70, H); c.closePath(); c.fill();
+    c.globalAlpha = 0.18; c.beginPath(); c.ellipse(tx, 500, 90, 22, 0, 0, Math.PI * 2); c.fill(); c.restore();
+    return;
+  }
+  if (G.stage !== 0) { if (G.amb) drawHawk(G.amb.x, G.amb.y, G.amb.vx > 0 ? 0 : Math.PI, G.frame, 0.55); return; }
+  if (G.cam && G.cam.kind === 'ct') drawCoryTrevor(G.cam);
+  if (G.cam && G.cam.kind === 'steve') { drawCat(G.cam.x, 404, G.cam.vx > 0 ? 1 : -1, G.cam.t, 1.5, '#c79a5e'); txt('STEVE FRENCH', G.cam.x, 366, 11, '#e6b45a', 'center', DISP, 3); }
   c.strokeStyle = 'rgba(20,16,26,0.9)'; c.lineWidth = 1.5; c.beginPath();
   STAGE_LIGHTS.forEach((l, i) => i ? c.lineTo(l.x, l.y) : c.moveTo(l.x, l.y)); c.stroke();
   STAGE_LIGHTS.forEach((l, i) => {
@@ -2243,6 +2422,7 @@ function render() {
   else if (G.scene === 'select') renderSelect();
   else if (G.scene === 'fight') renderFight();
   else if (G.scene === 'result') renderResult();
+  else if (G.scene === 'stage') renderStageSelect();
 }
 
 // =====================================================================
@@ -2260,7 +2440,7 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 let booted = false;
-function boot() { if (booted) return; booted = true; makePatterns(); buildStage(); loadSprites(() => requestAnimationFrame(t => { last = t; loop(t); })); }
+function boot() { if (booted) return; booted = true; makePatterns(); buildStages(); loadSprites(() => requestAnimationFrame(t => { last = t; loop(t); })); }
 if (document.fonts && document.fonts.load) {
   Promise.all([document.fonts.load(`20px "Bungee"`), document.fonts.load(`700 20px "Barlow Condensed"`)]).catch(() => {}).then(boot);
   setTimeout(boot, 2500);
