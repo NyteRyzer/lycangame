@@ -1,0 +1,64 @@
+name: Roblox
+
+on:
+  push:
+    paths:
+      - 'roblox/**'
+      - '.github/workflows/roblox.yml'
+  pull_request:
+    paths:
+      - 'roblox/**'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: roblox
+
+jobs:
+  build:
+    name: Lint, check and build the place file
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain (Rojo, Selene, StyLua, Luau)
+        working-directory: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          mkdir -p bin && cd bin
+          curl -sSL -o rojo.zip   https://github.com/rojo-rbx/rojo/releases/download/v7.4.4/rojo-7.4.4-linux-x86_64.zip
+          curl -sSL -o selene.zip https://github.com/Kampfkarren/selene/releases/download/0.27.1/selene-0.27.1-linux.zip
+          curl -sSL -o stylua.zip https://github.com/JohnnyMorganz/StyLua/releases/download/v0.20.0/stylua-linux-x86_64.zip
+          curl -sSL -o luau.zip   https://github.com/luau-lang/luau/releases/download/0.650/luau-ubuntu.zip
+          for z in *.zip; do unzip -oq "$z"; done
+          chmod +x rojo selene stylua luau luau-analyze luau-compile 2>/dev/null || true
+          echo "$PWD" >> "$GITHUB_PATH"
+
+      - name: Luau syntax check (every file must compile)
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r f; do
+            if ! luau-compile "$f" > err.txt 2>&1; then
+              echo "::error file=roblox/$f::$(cat err.txt)"
+              fail=1
+            fi
+          done < <(find src -name '*.luau')
+          exit $fail
+
+      - name: Lint (Selene, Roblox standard library)
+        run: selene src
+
+      - name: Format check (StyLua, advisory)
+        continue-on-error: true
+        run: stylua --check src
+
+      - name: Build place file
+        run: rojo build default.project.json -o LYCAN.rbxl
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LYCAN-Roblox-place
+          path: roblox/LYCAN.rbxl
+          if-no-files-found: error

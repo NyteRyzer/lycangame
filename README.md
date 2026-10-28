@@ -55,6 +55,10 @@ Build notes:
   - **Windows:** SmartScreen may ask you to click *More info → Run anyway*.
 - To sign builds, set the usual electron-builder `CSC_LINK` / `CSC_KEY_PASSWORD` secrets in CI.
 
+## Roblox version
+
+LYCAN is also being ported to **Roblox**. The source lives in [`roblox/`](roblox/): a Rojo project in strict Luau that includes the three forms (built on the player's own avatar), the forced full moon, the traversal and combat systems, Greyhaven generated at runtime, NPC factions, morality, heat, nests and the story. The **Roblox** workflow builds a ready-to-open `LYCAN.rbxl` place file as a download. See [`roblox/README.md`](roblox/README.md) for how to open it in Roblox Studio.
+
 ## Run from source
 
 ```bash

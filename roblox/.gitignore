@@ -1,0 +1,19 @@
+# Roblox build artifacts
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+
+# Wally
+Packages/
+ServerPackages/
+DevPackages/
+wally.lock
+
+# Toolchain
+sourcemap.json
+roblox.yml
+
+# OS
+.DS_Store
+Thumbs.db
