@@ -554,9 +554,7 @@ function HUD.start()
 		end
 		if kind == "toast" then
 			toast(text)
-		elseif kind == "banner" then
-			banner(text)
-		elseif kind == "objective" then
+		elseif kind == "banner" or kind == "objective" then
 			banner(text)
 		elseif kind == "event" then
 			banner("WORLD EVENT")
