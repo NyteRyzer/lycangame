@@ -1169,8 +1169,23 @@ const SPRITE_DEFS = {
     idle: { right: false, h: 192, ax: 0.48 }, attack: { right: true, h: 170, ax: 0.42 }, run: { right: true, h: 146, ax: 0.5 } } },
   bubbles: { head: [0.2, 0.03, 0.62, 0.33], frames: {
     idle: { right: false, h: 188, ax: 0.5 }, attack: { right: true, h: 128, ax: 0.26 }, run: { right: true, h: 128, ax: 0.5 } } },
+  // drawn in code by tools/npc (no reference sheet for these three yet)
+  lahey: { head: [0.098, 0.000, 0.670], frames: {
+    idle: { right: true, h: 188, ax: 0.407 }, attack: { right: true, h: 208, ax: 0.484 }, run: { right: true, h: 177, ax: 0.584 } } },
+  randy: { head: [0.122, 0.000, 0.632], frames: {
+    idle: { right: true, h: 186, ax: 0.414 }, attack: { right: true, h: 178, ax: 0.499 }, run: { right: true, h: 179, ax: 0.569 } } },
+  jroc: { head: [0.137, 0.000, 0.616], frames: {
+    idle: { right: true, h: 190, ax: 0.422 }, attack: { right: true, h: 187, ax: 0.41 }, run: { right: true, h: 178, ax: 0.572 } } },
 };
 const SPRITES = {};
+const CAMEO_ART = {};
+for (const n of ['cory_carry', 'trevor_carry', 'greenbastard_cheer']) { const img = new Image(); img.onload = () => { CAMEO_ART[n] = img; }; img.src = `sprites/${n}.webp`; }
+function drawCameo(n, x, y, h, dir) {
+  const img = CAMEO_ART[n]; if (!img) return false;
+  const w = h * img.width / img.height;
+  c.save(); c.translate(x, y); c.scale(dir, 1); c.drawImage(img, -w * 0.45, -h, w, h); c.restore();
+  return true;
+}
 function loadSprites(done) {
   const jobs = [];
   for (const id in SPRITE_DEFS) for (const fr in SPRITE_DEFS[id].frames) {
@@ -2118,6 +2133,7 @@ function buildStages() {
 // a guy in a green mask and cape cheering from the corner
 function drawGreenBastard(x, y, t) {
   const hop = Math.abs(Math.sin(t * 0.12)) * 6, wave = Math.sin(t * 0.2) * 0.5;
+  if (drawCameo('greenbastard_cheer', x, y - hop, 112, -1)) { txt('THE GREEN BASTARD', x, y - 124 - hop, 11, '#7ee07e', 'center', DISP, 3); return; }
   c.save(); c.translate(x, y - hop); c.strokeStyle = OUT; c.lineWidth = 2.5;
   c.fillStyle = '#2f8a3a'; c.beginPath(); c.moveTo(-12, -58); c.quadraticCurveTo(-26 + wave * 6, -20, -18, 0); c.lineTo(12, 0); c.quadraticCurveTo(20, -20, 12, -58); c.closePath(); c.fill(); c.stroke();
   c.fillStyle = '#5d86c4'; rrect(-10, -58, 20, 34, 5); c.fill(); c.stroke();
@@ -2133,6 +2149,15 @@ function drawGreenBastard(x, y, t) {
 // two hapless fans of Ricky and Julian, hauling a couch across the park
 function drawCoryTrevor(cam) {
   const x = cam.x, y = 412, t = cam.t;
+  if (CAMEO_ART.cory_carry && CAMEO_ART.trevor_carry) {
+    const dir = cam.vx > 0 ? 1 : -1, bob = Math.abs(Math.sin(t * 0.35)) * 3;
+    drawCameo('trevor_carry', x - dir * 52, y - bob, 92, dir);
+    c.save(); c.translate(x, y - 48 - bob); c.fillStyle = '#6b4a3a'; c.strokeStyle = OUT; c.lineWidth = 3;
+    rrect(-44, -10, 88, 20, 5); c.fill(); c.stroke(); rrect(dir > 0 ? -44 : 28, -32, 16, 40, 5); c.fill(); c.stroke(); c.restore();
+    drawCameo('cory_carry', x + dir * 50, y + bob, 92, dir);
+    txt('CORY & TREVOR', x, y - 106, 11, '#f3e9d2', 'center', DISP, 3);
+    return;
+  }
   c.save(); c.translate(x, y); c.scale(cam.vx > 0 ? 1 : -1, 1);
   const step = Math.sin(t * 0.35) * 4;
   c.fillStyle = '#6b4a3a'; c.strokeStyle = OUT; c.lineWidth = 2.5; rrect(-34, -38, 68, 18, 4); c.fill(); c.stroke(); rrect(-34, -50, 14, 30, 4); c.fill(); c.stroke();

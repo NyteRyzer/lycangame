@@ -6,7 +6,11 @@ An unofficial Trailer Park Boys fan parody fighting game drawn in a 2D comic-boo
 
 ## Art
 
-Ricky, Julian and Bubbles use hand-drawn sprites cut from `art/reference-sheet.jpg` (idle, attack and run poses for each). Mr. Lahey, Randy and J-Roc are still drawn in code in a matching comic style until they get their own sheet. Sounds and the stage are generated in code.
+Ricky, Julian and Bubbles use hand-drawn sprites cut from `art/reference-sheet.jpg` (idle, attack and run poses for each).
+
+Mr. Lahey, Randy, J-Roc and the cameo NPCs (Cory & Trevor and the Green Bastard) are 2D cartoon sprites drawn as vector art in `tools/npc/npc_art.js`. To change a pose or outfit, edit that file and run `node tools/npc/render_npcs.js`, which writes the images into `sprites/`. If these characters get a proper sprite sheet later, cut it with `tools/cut_sprites.py` instead.
+
+Sounds and the stages are generated in code.
 
 To re-cut the sprites after changing the sheet, run `python3 tools/cut_sprites.py`. It needs Pillow, NumPy and SciPy. The crop boxes at the top of the script say where each pose sits on the sheet.
 
