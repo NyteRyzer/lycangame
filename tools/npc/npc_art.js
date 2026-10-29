@@ -4,7 +4,24 @@
 // render_npcs.js. Units: the figure stands about 780 tall with its feet at y = 0.
 'use strict';
 const INK = '#151016';
-const SW = 7;
+const SW = 5;
+const DEFS = new Map();
+function tint(hex, amt) {
+  const n = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(amt < 0 ? v * (1 + amt) : v + (255 - v) * amt)));
+  return '#' + ((1 << 24) | (f(n >> 16) << 16) | (f((n >> 8) & 255) << 8) | f(n & 255)).toString(16).slice(1);
+}
+// soft across-the-form shading: dark on the back edge, lit toward the front
+function grad(col) {
+  if (!col || col[0] !== '#') return col;
+  const id = 'lg' + col.slice(1);
+  if (!DEFS.has(id)) DEFS.set(id, `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${tint(col, -0.38)}"/><stop offset="0.35" stop-color="${tint(col, -0.12)}"/><stop offset="0.7" stop-color="${col}"/><stop offset="1" stop-color="${tint(col, 0.14)}"/></linearGradient>`);
+  return `url(#${id})`;
+}
+function rgrad(col) {
+  const id = 'rg' + col.slice(1);
+  if (!DEFS.has(id)) DEFS.set(id, `<radialGradient id="${id}" cx="0.62" cy="0.4" r="0.75"><stop offset="0" stop-color="${tint(col, 0.12)}"/><stop offset="0.55" stop-color="${col}"/><stop offset="1" stop-color="${tint(col, -0.32)}"/></radialGradient>`);
+  return `url(#${id})`;
+}
 
 const fmt = n => +n.toFixed(2);
 const P = (d, fill, extra = '') => `<path d="${d}" fill="${fill}" stroke="${INK}" ${extra.includes('stroke-width') ? '' : `stroke-width="${SW}" `}stroke-linejoin="round" stroke-linecap="round" ${extra}/>`;
@@ -19,7 +36,7 @@ function limb(len, w0, w1, fill, bulge = 0, shadeA = 0.24) {
   const d = `M ${-a},0 Q ${-m},${len / 2} ${-b},${len} A ${b},${b} 0 0 0 ${b},${len} Q ${m},${len / 2} ${a},0 A ${a},${a} 0 0 0 ${-a},0 Z`;
   const s = `M ${-a},0 Q ${-m},${len / 2} ${-b},${len} L ${-b * 0.15},${len} Q ${-m * 0.2},${len / 2} ${-a * 0.25},0 Z`;
   const hl = `M ${a * 0.55},${a * 0.4} Q ${m * 0.62},${len / 2} ${b * 0.55},${len - b * 0.2}`;
-  return `<path d="${d}" fill="${fill}"/>` + shade(s, shadeA) + line(hl, Math.max(2, w1 * 0.12), '#ffffff', 0.22) + `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+  return `<path d="${d}" fill="${grad(fill)}"/>` + shade(s, shadeA * 0.5) + line(hl, Math.max(2, w1 * 0.12), '#ffffff', 0.22) + `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${SW}" stroke-linejoin="round"/>`;
 }
 
 function fist(skin) {
@@ -47,6 +64,7 @@ function arm(L, sh, el, back, hand) {
   else if (hand === 'open') h = openHand(L.skin);
   else if (hand && L.held && L.held[hand]) h = g(rot(-(sh + el)), L.held[hand]());
   else h = fist(L.skin);
+  if (L.watch && !back) fore += P(`M ${-(fw + 2) / 2},${FA - 26} L ${(fw + 2) / 2},${FA - 26} L ${(fw + 2) / 2},${FA - 14} L ${-(fw + 2) / 2},${FA - 14} Z`, L.watch, 'stroke-width="3"') + `<circle cx="${fw * 0.45}" cy="${FA - 20}" r="6" fill="#e9e6dc" stroke="${INK}" stroke-width="2.5"/>`;
   const forearm = g(`translate(0,${UA}) ${rot(el)}`, fore + g(`translate(0,${FA - 4})`, h));
   const out = g(rot(sh), s + forearm);
   return back ? `<g filter="url(#dim)">${out}</g>` : out;
@@ -93,7 +111,8 @@ function mouth(face, x, y) {
   if (face === 'happy') return P(`M ${x - 20},${y - 4} Q ${x - 2},${y + 2} ${x + 14},${y - 8} Q ${x + 10},${y + 16} ${x - 6},${y + 14} Q ${x - 18},${y + 8} ${x - 20},${y - 4} Z`, '#4a1418', 'stroke-width="4"') +
     `<path d="M ${x - 17},${y - 2} Q ${x - 2},${y + 3} ${x + 12},${y - 6} L ${x + 11},${y - 1} Q ${x - 2},${y + 7} ${x - 16},${y + 3} Z" fill="#f4efe2"/>`;
   if (face === 'angry') return P(`M ${x - 16},${y - 2} L ${x + 12},${y - 5} L ${x + 11},${y + 8} L ${x - 15},${y + 9} Z`, '#f4efe2', 'stroke-width="3.5"') + line(`M ${x - 15},${y + 3} L ${x + 11},${y + 1} M ${x - 6},${y - 3} L ${x - 6},${y + 9} M ${x + 3},${y - 4} L ${x + 3},${y + 8}`, 1.8);
-  return line(`M ${x - 16},${y} Q ${x - 2},${y + 6} ${x + 12},${y - 4}`, 4.5) + line(`M ${x - 8},${y + 10} Q ${x},${y + 13} ${x + 6},${y + 9}`, 2.5, INK, 0.45);
+  return `<path d="M ${x - 15},${y} Q ${x - 2},${y + 3} ${x + 12},${y - 3} Q ${x + 2},${y + 13} ${x - 12},${y + 6} Z" fill="#b5686a" opacity="0.6"/>` +
+    line(`M ${x - 16},${y} Q ${x - 2},${y + 4} ${x + 12},${y - 3}`, 3.5) + line(`M ${x - 8},${y + 12} Q ${x},${y + 15} ${x + 6},${y + 11}`, 2.2, INK, 0.4);
 }
 // skull + jaw in 3/4 view facing right; (0,0) is roughly between the ears
 function headShape(L) {
@@ -104,7 +123,7 @@ function head(L, face) {
   let s = '';
   if (L.hairBack) s += L.hairBack;
   const hs = headShape(L);
-  s += P(hs, L.skin);
+  s += P(hs, rgrad(L.skin));
   s += `<clipPath id="hc${L.id}${face}"><path d="${hs}"/></clipPath><g clip-path="url(#hc${L.id}${face})">` +
     `<ellipse cx="-46" cy="10" rx="34" ry="90" fill="#1a0e26" opacity="0.2"/>` +
     (L.stubble ? `<ellipse cx="34" cy="58" rx="40" ry="24" fill="${L.stubble}" opacity="0.28"/>` : '') +
@@ -114,15 +133,24 @@ function head(L, face) {
   // ear
   s += P('M -20,-12 Q -40,-14 -38,8 Q -36,28 -18,26 Q -12,10 -20,-12 Z', L.skin, 'stroke-width="5"') + line('M -24,-4 Q -32,6 -24,18', 3, INK, 0.6);
   if (L.hair) s += L.hair;
-  // eyes, brows
-  s += eye(30, -14, 18, 14, L.iris, face, false) + eye(63, -14, 8, 11, L.iris, face, true);
+  // eyes, brows (hidden behind sunglasses)
+  if (!L.shades) s += eye(30, -12, 13, 9, L.iris, face, false) + eye(62, -12, 6, 7, L.iris, face, true) +
+    line('M 18,-24 Q 30,-30 43,-24', 2.2, INK, 0.45) + line('M 20,-2 Q 30,2 41,-2', 2, '#7a4a3a', 0.45);
   const bc = L.brow || INK, up = face === 'angry' || face === 'yell' ? 1 : 0;
-  s += line(`M 12,${-34 + up * 2} Q 30,${-44 + up * 6} 46,${-36 + up * 10}`, 7, bc) + line(`M 56,${-34 + up * 8} L 70,${-38 - up * 2}`, 5, bc);
+  s += line(`M 14,${-30 + up * 2} Q 30,${-40 + up * 6} 46,${-33 + up * 9}`, 6, bc) + line(`M 56,${-31 + up * 8} L 70,${-34 - up * 2}`, 4, bc);
   // nose
   if (L.nose) s += P('M 54,0 Q 52,-14 64,-12 Q 84,-8 84,14 Q 82,30 64,30 Q 52,28 54,14 Z', L.nose, 'stroke-width="5"') + `<ellipse cx="72" cy="0" rx="5" ry="4" fill="#fff" opacity="0.6"/>`;
-  else s += line('M 58,-8 L 72,22 Q 72,30 62,30', 4.5) + line('M 54,24 Q 58,30 64,28', 3);
+  else s += P('M 50,-14 Q 58,4 72,16 Q 80,24 72,30 Q 66,33 60,30 Q 54,32 50,28', rgrad(L.skin), 'stroke-width="3.5" fill-opacity="1"') +
+    `<ellipse cx="60" cy="27" rx="4" ry="2.4" fill="${INK}" opacity="0.7"/>` + line('M 48,26 Q 40,40 42,54', 2.4, INK, 0.35);
   if (L.under) s += L.under;
   s += mouth(face, 46, 50);
+  if (L.shades) {
+    const lens = (cx, rx, ry) => `<path d="M ${cx - rx},${-22} Q ${cx},${-28} ${cx + rx},${-22} Q ${cx + rx + 2},${4} ${cx},${10} Q ${cx - rx - 2},${2} ${cx - rx},${-22} Z" fill="url(#aviator)" stroke="#c9a24a" stroke-width="3.5"/>`;
+    DEFS.set('aviator', '<linearGradient id="aviator" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1210"/><stop offset="0.6" stop-color="#4a2e22"/><stop offset="1" stop-color="#8a5a3a"/></linearGradient>');
+    s += lens(30, 20, 18) + lens(66, 8, 15) + line('M 50,-22 Q 56,-26 58,-22', 3, '#c9a24a') + line('M 10,-20 L -26,-6', 3.5, '#c9a24a') +
+      line('M 18,-16 L 30,-20', 2.5, '#ffffff', 0.45);
+  }
+  if (L.specs) s += `<rect x="12" y="-26" width="38" height="24" rx="5" fill="rgba(200,220,240,0.18)" stroke="${INK}" stroke-width="6"/><rect x="58" y="-25" width="14" height="22" rx="4" fill="rgba(200,220,240,0.18)" stroke="${INK}" stroke-width="5"/>` + line('M 50,-16 L 58,-16', 4) + line('M 12,-18 L -24,-8', 4);
   if (L.over) s += L.over;
   return s;
 }
@@ -131,7 +159,7 @@ function head(L, face) {
 function torso(L) {
   const sw = L.sw, ww = L.ww, b = L.belly, top = -230;
   const d = `M ${-sw + 2},${top + 48} Q ${-sw - 2},${top - 2} ${-sw + 52},${top - 6} L ${sw - 46},${top - 6} Q ${sw + 12},${top - 2} ${sw + 10},${top + 56} C ${sw + 12 + b * 0.3},${top + 100} ${ww + b},${-70} ${ww + b * 0.55},${-6} Q ${ww * 0.6},${18} 0,${18} L ${-ww + 8},${16} C ${-ww - 6},${-50} ${-sw + 6},${top + 130} ${-sw + 2},${top + 48} Z`;
-  let s = `<path d="${d}" fill="${L.shirt ? L.shirt : L.skin}"/>`;
+  let s = `<path d="${d}" fill="${grad(L.shirt ? L.shirt : L.skin)}"/>`;
   s += `<clipPath id="tc${L.id}"><path d="${d}"/></clipPath><g clip-path="url(#tc${L.id})">` + (L.torsoDetail || '') +
     `<ellipse cx="${-sw * 0.85}" cy="-110" rx="${sw * 0.55}" ry="200" fill="#1a0e26" opacity="0.24"/>` +
     `<ellipse cx="${sw * 0.35}" cy="${top + 50}" rx="${sw * 0.45}" ry="30" fill="#fff" opacity="0.14"/></g>`;
@@ -150,7 +178,7 @@ function legsAndBody(L, pose) {
   if (!pose.backArmFront) upper += g(`translate(${shB[0]},${shB[1]})`, arm(L, pose.armB[0], pose.armB[1], true, pose.handB));
   upper += g('translate(10,-210) rotate(180)', neck);
   upper += torso(L);
-  upper += g(`translate(${10 + (pose.headX || 0)},-300) rotate(${-(pose.headTilt || 0)})`, head(L, pose.face));
+  upper += g(`translate(${10 + (pose.headX || 0)},-286) rotate(${-(pose.headTilt || 0)}) scale(0.84)`, head(L, pose.face));
   s += g(rot(pose.lean || 0), upper);
   s += g('translate(18,0)', leg(L, pose.legF[0], pose.legF[1], false));
   let front = '';
@@ -163,7 +191,7 @@ function legsAndBody(L, pose) {
 
 function svgDoc(inner, w = 900, h = 1000, ox = 420, oy = 960) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-<defs><filter id="dim" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.74 0 0 0 0  0 0.72 0 0 0  0 0 0.78 0 0  0 0 0 1 0"/></filter></defs>
+<defs>${[...DEFS.values()].join('')}<filter id="dim" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.74 0 0 0 0  0 0.72 0 0 0  0 0 0.78 0 0  0 0 0 1 0"/></filter></defs>
 <g transform="translate(${ox},${oy})">${inner}</g></svg>`;
 }
 
@@ -179,45 +207,47 @@ const mic = () => P('M -10,-10 L 10,-10 L 6,60 L -6,60 Z', '#2b2b2b', 'stroke-wi
   line('M -14,-48 L 14,-48 M -15,-38 L 15,-38 M -6,-60 L -6,-24 M 6,-60 L 6,-24', 2, INK, 0.5) + fist('#f1c6a2');
 
 const CAST = {
+  // bald with a grey fringe, aviator sunglasses, beige work shirt with pens, khakis
   lahey: {
-    id: 'lahey', hipY: 318, skin: '#efb59c', iris: '#5d7f93', jaw: 4, bald: true, flush: 0.45, nose: '#d9606b', brow: '#e9e4da',
-    arm: [52, 40], leg: [70, 56], sw: 92, ww: 86, belly: 54,
-    shirt: '#a7c0da', cuff: '#94adc8', sleeve: 'long', pants: '#30343f', shoes: '#191919', shoeType: 'boot', belt: '#1b1b1b',
-    hairBack: P('M -40,-56 Q -64,-20 -56,24 Q -48,42 -34,46 Q -46,10 -30,-40 Z', '#e6e1d8', 'stroke-width="5"'),
-    hair: line('M -30,-50 Q 0,-82 40,-66 M -26,-42 Q 6,-74 44,-58 M -20,-36 Q 10,-66 46,-50', 3.5, '#e8e3da'),
-    over: P('M 22,38 Q 34,24 48,32 Q 62,24 76,36 Q 76,48 64,46 Q 50,42 46,48 Q 40,42 26,48 Q 18,46 22,38 Z', '#e6e1d8', 'stroke-width="4"') + line('M 32,34 L 30,44 M 40,32 L 38,44 M 56,32 L 56,44 M 66,34 L 66,44', 1.5, INK, 0.4),
-    torsoDetail: line('M 30,-226 L 46,10', 3.5, INK, 0.55) + `<g fill="#f4f0e6" stroke="${INK}" stroke-width="2.5"><circle cx="35" cy="-180" r="4.5"/><circle cx="38" cy="-130" r="4.5"/><circle cx="42" cy="-80" r="4.5"/><circle cx="45" cy="-30" r="4.5"/></g>` +
-      P('M -50,-190 L 4,-190 L 4,-150 L -50,-150 Z', '#93adc9', 'stroke-width="3.5"') + P('M -52,-194 L 6,-194 L 6,-182 L -52,-182 Z', '#8aa4c0', 'stroke-width="3"') +
-      P('M -36,-176 L -18,-176 L -12,-160 L -27,-152 L -42,-160 Z', '#e7c24b', 'stroke-width="3"') +
-      P('M 52,-196 L 92,-196 L 92,-178 L 52,-178 Z', '#f6f2e8', 'stroke-width="3"') + `<text x="72" y="-182" font-family="Arial Black, Impact, sans-serif" font-size="11" fill="#2a3a5a" text-anchor="middle">LAHEY</text>` +
-      line('M -80,-110 Q -40,-96 0,-108 M 60,-70 Q 90,-60 110,-76', 3, INK, 0.35),
-    torsoOver: P('M -10,-236 L 18,-212 L 40,-236 L 30,-246 L 18,-232 L 4,-246 Z', '#bcd0e6', 'stroke-width="4"') + P('M 10,-226 L 26,-226 L 30,-150 L 18,-134 L 6,-150 Z', '#38558a', 'stroke-width="4"'),
+    id: 'lahey', hipY: 318, skin: '#e7ad97', iris: '#5d7f93', jaw: 6, bald: true, flush: 0.3, brow: '#d8d2c6', shades: true, watch: '#c9a24a',
+    arm: [46, 36], leg: [58, 44], sw: 88, ww: 80, belly: 40,
+    shirt: '#d8cbb0', cuff: '#cbbd9f', sleeve: 'long', pants: '#b7a684', shoes: '#4a3020', shoeType: 'boot', belt: '#3a2618',
+    hairBack: P('M -30,-50 Q -62,-30 -58,16 Q -52,44 -30,50 Q -40,20 -36,-4 Q -34,-30 -18,-46 Z', '#cfcac0', 'stroke-width="4"') + line('M -50,-20 Q -48,10 -40,34 M -42,-30 Q -40,0 -34,26', 2, '#a9a49a'),
+    hair: line('M -20,-60 Q 4,-76 30,-70', 2, '#cfcac0', 0.8),
+    torsoDetail: line('M 26,-232 L 40,12', 3, INK, 0.5) + `<g fill="#efe8d6" stroke="${INK}" stroke-width="2"><circle cx="31" cy="-180" r="4"/><circle cx="34" cy="-128" r="4"/><circle cx="37" cy="-76" r="4"/><circle cx="40" cy="-26" r="4"/></g>` +
+      P('M -46,-180 L 6,-180 L 4,-128 L -44,-128 Z', '#cdbf9f', 'stroke-width="3"') + line('M -46,-172 L 6,-172', 2.5, INK, 0.5) +
+      `<rect x="-34" y="-196" width="6" height="34" rx="2" fill="#2a3a7a" stroke="${INK}" stroke-width="2"/><rect x="-22" y="-192" width="6" height="30" rx="2" fill="#b02a2a" stroke="${INK}" stroke-width="2"/><rect x="-10" y="-194" width="5" height="32" rx="2" fill="#1a1a1a" stroke="${INK}" stroke-width="2"/>` +
+      line('M -80,-120 Q -40,-104 0,-116 M 50,-80 Q 80,-66 106,-84 M -60,-50 Q -20,-36 20,-48', 2.5, INK, 0.3),
+    torsoOver: P('M -14,-238 L 14,-206 L 44,-238 L 34,-250 L 14,-228 L -2,-250 Z', '#e4d8be', 'stroke-width="4"'),
     held: { bottle },
   },
+  // short dark hair, no mustache, hairy chest and big hairy gut, white pants
   randy: {
-    id: 'randy', hipY: 316, skin: '#f0b994', iris: '#4a3524', jaw: 10, flush: 0.35, brow: '#2a1d14',
-    arm: [58, 46], leg: [76, 60], sw: 104, ww: 104, belly: 96, shirt: null, sleeve: null,
-    pants: '#3f5b84', jeans: true, shoes: '#2a2a2a', shoeStripe: '#cfcfcf', shoeType: 'sneaker', belt: '#3a2414',
-    hair: P('M -52,10 Q -66,-40 -40,-70 Q -30,-96 -6,-86 Q 10,-104 30,-88 Q 54,-96 60,-70 Q 70,-56 58,-38 Q 44,-58 24,-50 Q 10,-62 -6,-52 Q -20,-60 -30,-44 Q -40,-30 -36,6 Z', '#2a1d14', 'stroke-width="5"') +
-      line('M -30,-70 Q -16,-80 -8,-68 M 8,-80 Q 22,-86 28,-72 M 36,-78 Q 50,-80 52,-64', 3, '#5a4030'),
-    over: P('M 18,38 Q 30,22 46,32 Q 62,22 78,36 Q 80,50 66,46 Q 52,40 46,48 Q 40,40 24,48 Q 14,46 18,38 Z', '#2a1d14', 'stroke-width="4"'),
-    torsoDetail: (() => { let h = ''; for (let i = 0; i < 46; i++) { const x = -10 + (i % 9) * 12 + (i % 3), y = -205 + Math.floor(i / 9) * 14; h += `<path d="M ${x},${y} q 4,-6 8,0" fill="none" stroke="#3a2a1e" stroke-width="2"/>`; } for (let i = 0; i < 14; i++) { const x = 120 + (i % 3) * 10, y = -70 + Math.floor(i / 3) * 12; h += `<path d="M ${x},${y} q 4,-6 8,0" fill="none" stroke="#3a2a1e" stroke-width="2"/>`; } return h; })() +
-      `<ellipse cx="18" cy="-160" rx="7" ry="5" fill="#c78070"/><ellipse cx="92" cy="-162" rx="7" ry="5" fill="#c78070"/>` + line('M -30,-150 Q 50,-120 120,-160', 3, INK, 0.35) + line('M -40,-30 Q 70,10 170,-40', 3, INK, 0.3) +
-      P('M 150,-60 Q 158,-54 152,-46 Q 146,-52 150,-60 Z', '#a8664f', 'stroke-width="3"'),
-    held: { burger: () => burger() + fist('#f0b994') },
+    id: 'randy', hipY: 316, skin: '#e9b48e', iris: '#4a3524', jaw: 14, flush: 0.2, brow: '#241810', stubble: '#3a2a20', watch: '#b8bcc2',
+    arm: [52, 40], leg: [66, 50], sw: 102, ww: 100, belly: 92, shirt: null, sleeve: null,
+    pants: '#eceae2', shoes: '#3a2a1e', shoeType: 'boot', belt: '#5a3a24',
+    hair: P('M -50,4 Q -60,-46 -30,-70 Q 0,-90 34,-80 Q 58,-70 60,-44 Q 58,-34 54,-30 Q 46,-50 26,-52 Q 6,-60 -10,-50 Q -30,-40 -38,-14 Q -42,0 -40,10 Z', '#22170f', 'stroke-width="4"') +
+      line('M -24,-60 Q 0,-74 30,-68 M -16,-50 Q 6,-62 34,-58', 2.5, '#4a3424'),
+    torsoDetail: (() => { let h = ''; for (let i = 0; i < 90; i++) { const x = -40 + (i % 15) * 10 + (i % 4) * 2, y = -210 + Math.floor(i / 15) * 14; h += `<path d="M ${x},${y} q 3,-6 7,-1" fill="none" stroke="#2a1d14" stroke-width="2" opacity="0.8"/>`; }
+        for (let i = 0; i < 60; i++) { const x = 20 + (i % 10) * 14 + (i % 3) * 3, y = -120 + Math.floor(i / 10) * 18; h += `<path d="M ${x},${y} q 3,-6 7,-1" fill="none" stroke="#2a1d14" stroke-width="1.8" opacity="0.65"/>`; } return h; })() +
+      `<ellipse cx="14" cy="-166" rx="7" ry="5" fill="#b8746a"/><ellipse cx="94" cy="-168" rx="7" ry="5" fill="#b8746a"/>` + line('M -40,-140 Q 40,-112 130,-150', 3, INK, 0.3) +
+      P('M 150,-56 Q 158,-50 152,-42 Q 146,-48 150,-56 Z', '#a8664f', 'stroke-width="3"'),
+    held: { burger: () => burger() + fist('#e9b48e') },
   },
+  // grey flat cap, black glasses, two long braids, white tank top, baggy khakis
   jroc: {
-    id: 'jroc', hipY: 320, skin: '#f2c8a4', iris: '#3c2a1e', jaw: 2, brow: '#4a3220', stubble: '#4a3220',
-    arm: [48, 38], leg: [84, 76], sw: 90, ww: 82, belly: 0, shirt: '#f4f4f2', sleeve: 'short',
-    pants: '#2f5aa8', jeans: true, baggy: true, shoes: '#f4f4f2', shoeStripe: '#c0392b', shoeType: 'sneaker', belt: null,
-    hair: P('M -58,6 Q -66,-60 -10,-84 Q 40,-92 62,-52 Q 66,-34 60,-26 Q 20,-40 -20,-30 Q -40,-24 -48,0 Z', '#c0392b', 'stroke-width="6"') +
-      P('M -46,-20 Q -96,-22 -110,-6 Q -84,6 -44,0 Z', '#a8301f', 'stroke-width="6"') + `<circle cx="-4" cy="-82" r="8" fill="#f4f4f2" stroke="${INK}" stroke-width="4"/>` +
-      P('M 10,-70 L 34,-70 L 34,-48 L 10,-48 Z', '#f4f4f2', 'stroke-width="3"') + `<text x="22" y="-52" font-family="Arial Black, Impact, sans-serif" font-size="20" fill="#c0392b" text-anchor="middle">J</text>` +
-      `<path d="M 40,-34 Q 50,-30 58,-28" stroke="${INK}" stroke-width="3" fill="none"/>`,
-    under: P('M 36,60 Q 46,72 58,62 L 56,82 Q 46,90 38,80 Z', '#4a3220', 'stroke-width="3"') + line('M 30,42 Q 46,38 62,42', 4, '#4a3220'),
-    torsoDetail: line('M -60,-150 Q -50,-100 -66,-40 M -20,-130 Q -14,-80 -26,-20 M 60,-60 Q 70,-30 64,0', 3, INK, 0.3) + `<text x="20" y="-90" font-family="Impact, Arial Black, sans-serif" font-size="58" fill="#2f5aa8" stroke="${INK}" stroke-width="3" text-anchor="middle">J</text>`,
-    torsoOver: `<path d="M -30,-226 Q 20,-140 70,-224" fill="none" stroke="${INK}" stroke-width="12"/><path d="M -30,-226 Q 20,-140 70,-224" fill="none" stroke="#f2c53d" stroke-width="7" stroke-dasharray="7 4"/>` +
-      P('M 8,-166 L 34,-166 L 34,-136 L 8,-136 Z', '#f2c53d', 'stroke-width="4"') + `<text x="21" y="-144" font-family="Impact, Arial Black, sans-serif" font-size="20" fill="${INK}" text-anchor="middle">$</text>`,
+    id: 'jroc', hipY: 320, skin: '#cf9b74', iris: '#2e2016', jaw: 0, brow: '#2a1a10', stubble: '#2a1a10', specs: true,
+    arm: [38, 30], leg: [72, 64], sw: 80, ww: 70, belly: 0, shirt: '#f2f2ee', sleeve: null,
+    pants: '#bfae8a', baggy: true, shoes: '#f2f2ee', shoeStripe: '#9a9a9a', shoeType: 'sneaker', belt: null,
+    hairBack: (() => { let h = ''; for (const bx of [-26, -6]) { for (let k = 0; k < 11; k++) h += `<ellipse cx="${bx + Math.sin(k) * 2}" cy="${28 + k * 22}" rx="9" ry="13" fill="#1d140e" stroke="${INK}" stroke-width="3"/>`; h += `<ellipse cx="${bx}" cy="${28 + 11 * 22}" rx="5" ry="8" fill="#1d140e"/>`; } return h; })(),
+    hair: P('M -58,-6 Q -64,-56 -18,-74 Q 30,-86 62,-56 Q 72,-46 66,-36 Q 92,-38 98,-26 Q 70,-18 40,-26 Q 0,-30 -40,-16 Q -52,-10 -58,-6 Z', '#77767a', 'stroke-width="5"') +
+      line('M -40,-48 Q 10,-66 58,-48 M -30,-36 Q 16,-50 60,-40', 2, '#5a595c') + line('M -20,-70 L -14,-28', 2, '#5a595c', 0.6),
+    under: line('M 36,42 Q 48,38 60,42', 3, '#2a1a10', 0.7) + P('M 40,62 Q 46,70 54,62 L 52,74 Q 46,78 42,72 Z', '#2a1a10', 'stroke-width="2"'),
+    // tank top: bare shoulders and a scoop neck cut out of the white shirt
+    torsoDetail: `<path d="M -120,-260 L -30,-260 Q -40,-200 -98,-180 L -120,-180 Z" fill="${'#cf9b74'}" stroke="${INK}" stroke-width="4"/>` +
+      `<path d="M 140,-260 L 64,-260 Q 70,-200 120,-176 L 140,-176 Z" fill="${'#cf9b74'}" stroke="${INK}" stroke-width="4"/>` +
+      `<path d="M -16,-262 Q 18,-196 52,-262 Z" fill="#cf9b74" stroke="${INK}" stroke-width="4"/>` +
+      line('M -60,-130 Q -50,-80 -64,-20 M 40,-120 Q 52,-70 42,-10', 2.5, INK, 0.25),
     held: { mic: () => mic() },
   },
 };
@@ -259,5 +289,5 @@ const POSES = {
   greenbastard: { cheer: { face: 'happy', lean: -6, armF: [150, -20], handF: 'fist', armB: [-150, 20], handB: 'fist', legF: [20, 12], legB: [-18, 10] } },
 };
 
-function renderSvg(id, pose) { return svgDoc(g(`translate(0,-${CAST[id].hipY})`, legsAndBody(CAST[id], POSES[id][pose]))); }
+function renderSvg(id, pose) { DEFS.clear(); const body = g(`translate(0,-${CAST[id].hipY})`, legsAndBody(CAST[id], POSES[id][pose])); return svgDoc(body); }
 if (typeof window !== 'undefined') window.NPC = { renderSvg, CAST, POSES };
